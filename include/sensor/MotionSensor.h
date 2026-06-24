@@ -7,7 +7,8 @@
 class MotionSensor : public Sensor
 {
 private:
-    float motionLevel;  // The motion level
+    double motionLevel = 0.0;      // The motion level
+    const double threshold = 0.5;  // Minimum motion level required to detect movement
 
 private:
     /**
@@ -15,7 +16,7 @@ private:
      *
      * @return true if motion is detected, false otherwise
      */
-    bool detectMotion();
+    bool detectMotion() const;
 
 public:
     /**
@@ -26,9 +27,16 @@ public:
     MotionSensor(uint32_t id);
 
     /**
-     * @brief Generates a telemetry reading for the motion sensor
-     *
-     * @return The generated telemetry packet
+     * @brief Collect the sensor data and update the current state.
+     * 
+     * @return The data of the sensor
      */
-    SensorReading generateReading() override;
+    double collectData() override;
+
+    /**
+     * @brief Returns the sensor type.
+     *
+     * @return SensorType Type identifier of the sensor.
+     */
+    SensorType getType() const override;
 };

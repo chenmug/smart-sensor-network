@@ -28,6 +28,7 @@ double MotionSensor::collectData()
 
     motionLevel = dist(gen);
 
+    currentValue = motionLevel;
     currentState = detectMotion() ? SensorState::ACTIVE : SensorState::WARNING;
     
    return motionLevel;

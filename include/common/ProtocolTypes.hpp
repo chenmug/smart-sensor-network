@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>  // uint64_t
+#include <cstdint>  // uint32_t, uint64_t
 
 /**
  * @brief Defines the different types of sensors in the system.
@@ -37,8 +37,9 @@ enum class SensorState
  */
 struct SensorReading 
 {
-    uint32_t sensorId;       // The sensor unique identifier
-    SensorType type;         // Type of sensor that generated the reading
-    double value;            // Measured value produced by the sensor
-    uint64_t timestamp_ms;;  // Time at which the reading was generated (Unix time or milliseconds)
+    uint32_t sensorId;      // The sensor unique identifier
+    SensorType type;        // Type of sensor that generated the reading
+    SensorState state;      // The state of the sensor
+    double value;           // Measured value produced by the sensor
+    uint64_t timestamp_ms;  // Time at which the reading was generated (Unix time or milliseconds)
 };

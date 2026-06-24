@@ -1,0 +1,25 @@
+#pragma once
+#include "common/ProtocolTypes.hpp"  // Forward Declaration
+#include <string>                    // For std::string
+
+/**
+ * @brief Converts a SensorType enum value to its string representation.
+ *
+ * This function maps each SensorType enum value to a human-readable string.
+ * It is typically used for logging, debugging, and telemetry visualization.
+ *
+ * @param type The sensor type to convert.
+ * @return A string representing the given SensorType value.
+ */
+std::string stringType(SensorType type);
+
+/**
+ * @brief Converts a SensorState enum value to its string representation.
+ *
+ * This function maps each SensorState enum value to a human-readable string that describes the
+ * operational state of a sensor. It is mainly used for logging, monitoring, and system diagnostics.
+ *
+ * @param state The sensor state to convert.
+ * @return A string representing the given SensorState value.
+ */
+std::string stringState(SensorState state);

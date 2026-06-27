@@ -1,22 +1,23 @@
 #pragma once
-#include <string>   // For std::string
-#include <vector>   // For std::vector
-#include <cstdint>  // For uint16_t  
+#include "network/IUdpSender.hpp"  // Forward Declaration
+#include <string>                  // For std::string
+#include <vector>                  // For std::vector
+#include <cstdint>                 // For uint16_t  
 
 
 /**
- * @brief Sends binary telemetry data to a remote endpoint using UDP.
+ * @brief Sends binary telemetry data to a remote UDP endpoint.
  *
- * The UdpSender required for transmitting serialized telemetry packets over the network. 
- * It manages the lifetime of the UDP socket and sends raw byte buffers to a configured
+ * UdpSender is responsible for transmitting serialized telemetry packets over the network.
+ * It manages the lifetime of a UDP socket and sends raw byte buffers to a configured
  * gateway IP address and port.
  */
-class UdpSender
+class UdpSender : public IUdpSender
 {
 private:
     std::string gatewayIp;  // Destination IPv4 address of the gateway
     uint16_t gatewayPort;   // Destination UDP port
-    int sockfd;             // Operating system socket descriptor
+    int sockfd = -1;        // UDP socket file descriptor (-1 means invalid/uninitialized)
 
 public:
     /**
@@ -35,14 +36,12 @@ public:
      *
      * Releases the underlying operating system socket resource.
      */
-    ~UdpSender();
+    ~UdpSender() override;
 
     /**
      * @brief Sends a serialized telemetry packet over UDP.
      *
-     * Transmits the provided binary buffer to the configured destination.
-     *
      * @param data Serialized telemetry data to transmit.
      */
-    void send(const std::vector<uint8_t>& data);
+    void send(const std::vector<uint8_t>& data) override;
 };

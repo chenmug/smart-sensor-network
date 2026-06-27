@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>   // For std::vector 
+#include <cstdint>  // For uint8_t
 
 
 /**

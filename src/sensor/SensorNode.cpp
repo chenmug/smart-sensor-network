@@ -24,7 +24,7 @@ SensorReading SensorNode::tick()
             << "Type: " << stringType(reading.type)
             << " Value: " << reading.value
             << " State: " << stringState(reading.state)
-            << " Time stamp: " << reading.timestamp_ms
+            << " Timestamp: " << reading.timestamp_ms
             << std::endl;
     
     auto data = serializer.serialize(reading);

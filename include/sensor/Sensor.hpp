@@ -55,13 +55,6 @@ public:
     void updateState(SensorState state);
 
     /**
-     * @brief Main execution loop of the sensor.
-     *
-     * Handles periodic reading generation, state updates, and heartbeat logic.
-     */
-    void runLoop();
-
-    /**
      * @brief Creates a telemetry packet from the current sensor reading.
      *
      * @return SensorReading structured telemetry data

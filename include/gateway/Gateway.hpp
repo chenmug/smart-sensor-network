@@ -1,8 +1,9 @@
 #pragma once
-#include "common/ProtocolTypes.hpp"  // Forward Declaration
-#include <unordered_map>             // For std::unordered_map
-#include <cstdint>                   // For uint8_t, uint64_t
-#include <vector>                    // for std::vector
+#include "network/TelemetrySerializer.hpp"  // Forward Declaration
+#include "common/ProtocolTypes.hpp"         // Forward Declaration
+#include <unordered_map>                    // For std::unordered_map
+#include <cstdint>                          // For uint8_t, uint64_t
+#include <vector>                           // for std::vector
 
 /**
  * @brief Central system that receives telemetry from sensors and stores their state.
@@ -62,4 +63,14 @@ public:
      * @param reading Decoded telemetry data from a sensor.
      */
     void updateSensorInfo(const SensorReading& reading);
+
+    /**
+     * @brief Provides read-only access to the internal sensor registry.
+     *
+     * This function is intended for testing and debugging purposes only,
+     * and exposes the current state of all sensors stored in the Gateway.
+     *
+     * @return Const reference to the map of sensor IDs and their latest state.
+     */
+    const std::unordered_map<uint32_t, SensorInfo>& getSensors() const;
 };

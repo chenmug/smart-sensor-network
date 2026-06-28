@@ -21,3 +21,11 @@ void Gateway::updateSensorInfo(const SensorReading& reading)
     info.lastReading = reading;
     info.lastUpdateTime = now();
 }
+
+
+// /**************** GET SENSORS ****************/
+
+const std::unordered_map<uint32_t, Gateway::SensorInfo>& Gateway::getSensors() const
+{
+    return sensors;
+}

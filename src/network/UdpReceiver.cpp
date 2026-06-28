@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <cstring>
+#include <fcntl.h>
 #include <iostream>
 
 
@@ -19,6 +20,8 @@ UdpReceiver::UdpReceiver(Gateway& gateway, uint16_t port)
         throw std::runtime_error("Failed to create UDP socket");
     }
 
+    fcntl(sockfd, F_SETFL, O_NONBLOCK);
+    
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
@@ -53,6 +56,16 @@ void UdpReceiver::receivePacket()
 
     if (bytesReceived < 0)
     {
+        if (!running)
+        {
+            return; 
+        }
+
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            return; 
+        }
+
         perror("recvfrom failed");
         return;
     }
@@ -87,12 +100,6 @@ void UdpReceiver::run()
 void UdpReceiver::stop()
 {
     running = false;
-
-    if (sockfd >= 0)
-    {
-        close(sockfd);
-        sockfd = -1;
-    }
 }
 
 
@@ -101,4 +108,10 @@ void UdpReceiver::stop()
 UdpReceiver::~UdpReceiver()
 {
     stop();
+
+    if (sockfd >= 0)
+    {
+        close(sockfd);
+        sockfd = -1;
+    }
 }

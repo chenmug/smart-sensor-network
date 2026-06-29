@@ -1,74 +1,98 @@
 # Smart Sensor Network
+
 ### Distributed Embedded-Inspired Telemetry System (C++)
 
-A C++ system that simulates a network of embedded sensor devices communicating with a central gateway using UDP telemetry and TCP-based monitoring.
+A C++ project that simulates a network of embedded-inspired sensor devices communicating with a central gateway using UDP telemetry and a TCP monitoring interface.
 
-The project demonstrates systems programming concepts such as networking, concurrency, and embedded software design patterns.
+The project explores systems programming concepts including socket programming, multithreading, binary protocols, and embedded software architecture.
 
 ---
 
 ## Overview
 
-The system simulates multiple sensor devices that:
+The current implementation includes:
 
-- Generate periodic telemetry data
-- Maintain internal state using finite state machines
-- Send data via UDP
-- Report heartbeat status
+* Simulated sensor nodes generating telemetry
+* Binary serialization of sensor messages
+* UDP-based telemetry transmission
+* Central Gateway maintaining the latest state of each sensor
+* TCP server exposing a simple monitoring interface
+* Unit tests for core components using GoogleTest
 
-A central Gateway:
-
-- Receives telemetry from all sensors
-- Tracks device health
-- Detects offline devices
-- Provides a TCP monitoring interface
 
 ---
 
-## Architecture
+## Current Architecture
 
-- **Sensor Nodes** → UDP telemetry + heartbeat
-- **Gateway Server** → data aggregation + monitoring
-- **Monitor Client** → TCP-based system status viewer
+```text
++-------------+
+| Sensor Node |
++-------------+
+      |
+      | UDP
+      v
++-------------+
+|   Gateway   |
++-------------+
+      ^
+      | TCP
+      |
++-------------+
+| TCP Client  |
++-------------+
+```
 
 ---
 
-## Key Concepts
+## Current Features
 
-- UDP & TCP socket programming
-- Multithreading & synchronization
-- Finite State Machines (FSM)
-- Watchdog timers
-- Heartbeat monitoring
-- Binary protocol design
+* Sensor simulation
+* UDP socket communication
+* TCP monitoring server
+* Binary telemetry protocol
+* Multithreaded execution
+* Gateway state management
+* GoogleTest unit tests
+
+---
+
+## Planned Features
+
+* Heartbeat monitoring
+* Finite State Machines (FSM)
+* Offline sensor detection
+* Watchdog timers
+* Multiple sensor types (Temperature, Pressure, Battery)
+* Packet loss simulation
+* CRC validation
+* Prometheus metrics
+* MQTT support
 
 ---
 
 ## Tech Stack
 
-- C++17/20
-- Linux
-- POSIX Sockets
-- Multithreading
-- CMake
+* C++17
+* Linux
+* POSIX Sockets
+* TCP/IP
+* UDP
+* Multithreading
+* CMake
+* GoogleTest
 
 ---
 
 ## Why This Project?
 
-This project was built to explore how embedded and IoT systems communicate in real-world environments, focusing on low-level networking, concurrency, and system reliability.
+The goal of this project is to gain hands-on experience building software commonly found in embedded and IoT systems, focusing on networking, concurrency, and modular software architecture.
+
+Rather than targeting specific hardware, the project simulates how embedded devices exchange telemetry with a central monitoring service.
 
 ---
 
 ## Project Status
 
-This project is currently in early development. Core components are being implemented step by step starting from the Sensor Node design.
+**Work in Progress**
 
----
-
-## Future Improvements
-
-- Packet loss simulation
-- CRC validation
-- Prometheus metrics
-- MQTT support
+The networking infrastructure, telemetry pipeline, and monitoring interface are implemented. Additional embedded-oriented features such as heartbeat monitoring and fault detection are currently under development.

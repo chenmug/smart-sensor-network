@@ -19,13 +19,7 @@ SensorReading SensorNode::tick()
     const SensorReading reading = sensor.createTelemetry();
 
     // Temporary debug logging - will be replaced by Monitor module
-    std::cout
-            << "[Sensor " << reading.sensorId << "] "
-            << "Type: " << stringType(reading.type)
-            << " Value: " << reading.value
-            << " State: " << stringState(reading.state)
-            << " Timestamp: " << reading.timestamp_ms
-            << std::endl;
+    std::cout << "[SENSOR " << reading.sensorId << "] Sending telemetry...\n";
     
     auto data = serializer.serialize(reading);
     sender.send(data); 

@@ -1,6 +1,8 @@
 #include "gateway/Gateway.hpp"
 #include "common/TimeUtils.hpp"
 #include "network/TelemetrySerializer.hpp"
+#include "common/SensorTypesString.hpp"  // For debugging 
+#include <iostream>                      // For debugging
 
 
 // /*************** HANDLE PACKET ***************/
@@ -20,6 +22,9 @@ void Gateway::updateSensorInfo(const SensorReading& reading)
     
     info.lastReading = reading;
     info.lastUpdateTime = now();
+
+    std::cout << "[GATEWAY] Updated sensor "
+          << reading.sensorId << " (" << stringType(reading.type) << ")\n";
 }
 
 

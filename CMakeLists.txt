@@ -5,28 +5,31 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --------------------
-# Source files
+# Core sources
 # --------------------
-file(GLOB_RECURSE SOURCES
-    src/*.cpp
+file(GLOB_RECURSE CORE_SOURCES
+    src/common/*.cpp
+    src/network/*.cpp
+    src/sensor/*.cpp
+    src/gateway/*.cpp
 )
 
-# --------------------
-# Main library 
-# --------------------
-add_library(sensor_lib ${SOURCES})
-
+add_library(sensor_lib ${CORE_SOURCES})
 target_include_directories(sensor_lib PUBLIC include)
 
+
 # --------------------
-# Main application
+# Main app
 # --------------------
-add_executable(sensor_app main.cpp)
+add_executable(sensor_app
+    main.cpp
+    ${DEMO_SOURCES}
+)
 
 target_link_libraries(sensor_app sensor_lib)
 
 # --------------------
-# GoogleTest
+# Tests
 # --------------------
 enable_testing()
 
@@ -49,6 +52,5 @@ target_include_directories(run_tests PRIVATE
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/tests
 )
-
 
 add_test(NAME SensorTests COMMAND run_tests)

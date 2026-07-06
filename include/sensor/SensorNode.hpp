@@ -2,6 +2,7 @@
 #include "sensor/Sensor.hpp"                // Forward Declaration
 #include "network/TelemetrySerializer.hpp"  // Forward Declaration
 #include "network/IUdpSender.hpp"           // Forward Declaration
+#include "monitor/ILogger.hpp"              // Forward Declaration
 #include <chrono>                           // For std::chrono::milliseconds
 #include <atomic>                           // For std::atomic
 
@@ -20,6 +21,8 @@ private:
     std::chrono::milliseconds interval;  // Time between sensor updates
     std::atomic<bool> running;           // Controls main loop execution
     TelemetrySerializer serializer;      // Converts telemetry data into bytes
+    ILogger& logger;                      // Reference to the shared system logger used for thread-safe system logging.
+
 
 public:
     /**
@@ -27,9 +30,10 @@ public:
      *
      * @param sensor Pointer to a sensor instance.
      * @param sender UDP sender responsible for transmission.
+     * @param logger Reference to the shared system Logger.
      * @param intervalMs Time between telemetry transmissions.
      */
-    SensorNode(Sensor& sensor, IUdpSender& sender, std::chrono::milliseconds intervalMs = std::chrono::milliseconds(500));
+    SensorNode(Sensor& sensor, IUdpSender& sender, ILogger& logger, std::chrono::milliseconds intervalMs = std::chrono::milliseconds(500));
     
     /**
      * @brief Executes a single sensor cycle (one iteration of the pipeline).

@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 #include "gateway/Gateway.hpp"
+#include "fakes/FakeLogger.hpp"
 
 
 TEST(Gateway, CreatesNewSensor)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
     
     SensorReading r{1, SensorType::Motion, SensorState::ACTIVE, 0.5, 100};
 
@@ -18,7 +20,8 @@ TEST(Gateway, CreatesNewSensor)
 
 TEST(Gateway, OverwritesExistingSensor)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     SensorReading r1{1, SensorType::Motion, SensorState::ACTIVE, 0.5, 100};
     SensorReading r2{1, SensorType::Motion, SensorState::ACTIVE, 0.9, 200};
@@ -40,7 +43,8 @@ TEST(Gateway, OverwritesExistingSensor)
 
 TEST(Gateway, UpdatesTimestamp)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     SensorReading r{2, SensorType::Motion, SensorState::ACTIVE, 0.5, 100};
     gateway.updateSensorInfo(r);
@@ -54,7 +58,8 @@ TEST(Gateway, UpdatesTimestamp)
 
 TEST(Gateway, HandlePacketUpdatesSensor)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     TelemetrySerializer serializer;
     SensorReading r{5, SensorType::Motion, SensorState::ACTIVE, 0.77, 999};

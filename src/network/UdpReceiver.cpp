@@ -10,8 +10,8 @@
 
 // /*************** CONSTRUCTOR ***************/
 
-UdpReceiver::UdpReceiver(Gateway& gateway, uint16_t port)
-    : gateway(gateway), port(port), running(false)
+UdpReceiver::UdpReceiver(Gateway& gateway, ILogger& logger, uint16_t port)
+    : gateway(gateway), logger(logger), port(port), running(false)
 {
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -82,11 +82,13 @@ void UdpReceiver::run()
 {
     if (sockfd < 0)
     {
-        std::cerr << "Invalid socket. Receiver not started.\n";
+        logger.log("Invalid socket. Receiver not started.");
         return;
     }
 
     running = true;
+
+    logger.log("[UDP] Receiver started");
 
     while (running) 
     {

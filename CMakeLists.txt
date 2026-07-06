@@ -12,6 +12,7 @@ file(GLOB_RECURSE CORE_SOURCES
     src/network/*.cpp
     src/sensor/*.cpp
     src/gateway/*.cpp
+    src/monitor/*.cpp
 )
 
 add_library(sensor_lib ${CORE_SOURCES})

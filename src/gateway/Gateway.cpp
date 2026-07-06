@@ -5,6 +5,13 @@
 #include <iostream>                      // For debugging
 
 
+// /**************** CONSTRUCTOR *****************/
+
+Gateway::Gateway(ILogger& logger)
+    : logger(logger)
+{}
+
+
 // /*************** HANDLE PACKET ***************/
 
 void Gateway::handlePacket(const std::vector<uint8_t>& packet)
@@ -23,8 +30,9 @@ void Gateway::updateSensorInfo(const SensorReading& reading)
     info.lastReading = reading;
     info.lastUpdateTime = now();
 
-    std::cout << "[GATEWAY] Updated sensor "
-          << reading.sensorId << " (" << stringType(reading.type) << ")\n";
+    logger.log("[GATEWAY] Updated sensor " +
+               std::to_string(reading.sensorId) +
+               " (" + stringType(reading.type) + ")");
 }
 
 

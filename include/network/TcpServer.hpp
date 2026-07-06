@@ -1,5 +1,6 @@
 #pragma once
 #include "gateway/Gateway.hpp"  // Forward Declaration
+#include "monitor/ILogger.hpp"  // Forward Declaration
 #include <atomic>               // For std::atomic
 #include <string>               // For std::string
 
@@ -27,6 +28,7 @@ private:
     Gateway& gateway;                                     // Reference to the central Gateway storing the latest sensor state.
     int serverSocket = -1;                                // File descriptor of the listening TCP socket (-1 indicates an invalid socket).
     std::atomic<bool> running;                            // Controls whether the server's main loop continues accepting clients.
+    ILogger& logger;                                      // Reference to the shared system logger used for thread-safe system logging.
 
 public:
 
@@ -37,9 +39,10 @@ public:
      * and prepares it to accept incoming client connections.
      *
      * @param gateway Reference to the central Gateway storing sensor state.
+     * @param logger Reference to the shared system logger.
      * @param port TCP port on which the server will listen.
      */
-    TcpServer(Gateway& gateway, uint16_t port);
+    TcpServer(Gateway& gateway, ILogger& logger, uint16_t port);
 
     /**
      * @brief Processes a single client command and generates a response.

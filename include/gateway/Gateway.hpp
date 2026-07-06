@@ -1,6 +1,7 @@
 #pragma once
 #include "network/TelemetrySerializer.hpp"  // Forward Declaration
 #include "common/ProtocolTypes.hpp"         // Forward Declaration
+#include "monitor/ILogger.hpp"              // Forward Declaration
 #include <unordered_map>                    // For std::unordered_map
 #include <cstdint>                          // For uint8_t, uint64_t
 #include <vector>                           // for std::vector
@@ -33,14 +34,18 @@ private:
 
     std::unordered_map<uint32_t, SensorInfo> sensors;  // Registry of all sensors known to the gateway.
     TelemetrySerializer serializer;                    // Converts bytes into telemetry data into 
+    ILogger& logger;                                   // Reference to the shared system logger used for thread-safe system logging.
     
 public:
     /**
-     * @brief Constructs an empty Gateway instance.
+     * @brief Constructs a Gateway instance.
      *
-     * Initializes the internal sensor registry.
+     * Initializes the internal sensor registry and prepares the Gateway
+     * to receive and process sensor telemetry data.
+     *
+     * @param logger Reference to the shared system Logger.
      */
-    Gateway() = default;
+    Gateway(ILogger& logger);
 
     /**
      * @brief Handles an incoming raw UDP packet.

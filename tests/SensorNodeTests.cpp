@@ -2,14 +2,16 @@
 #include "sensor/SensorNode.hpp"
 #include "sensor/MotionSensor.h"
 #include "fakes/FakeUdpSender.hpp"
+#include "fakes/FakeLogger.hpp"
 
 
 TEST(SensorNode, TickProducesValidReading)
 {
     MotionSensor sensor(1);
     FakeUdpSender sender;
+    FakeLogger logger;
 
-    SensorNode node(sensor, sender, std::chrono::milliseconds(100));
+    SensorNode node(sensor, sender, logger, std::chrono::milliseconds(100));
 
     SensorReading r = node.tick();
 
@@ -23,7 +25,9 @@ TEST(SensorNode, SendsPacket)
 {
     MotionSensor sensor(1);
     FakeUdpSender sender;
-    SensorNode node(sensor, sender);
+    FakeLogger logger;
+    
+    SensorNode node(sensor, sender, logger);
     const auto& packets = sender.getPackets();
 
     node.tick();
@@ -37,8 +41,9 @@ TEST(SensorNode, TickUpdatesStateCorrectly)
 {
     MotionSensor sensor(1);
     FakeUdpSender sender;
+    FakeLogger logger;
 
-    SensorNode node(sensor, sender, std::chrono::milliseconds(100));
+    SensorNode node(sensor, sender, logger, std::chrono::milliseconds(100));
 
     SensorReading r = node.tick();
 
@@ -53,8 +58,9 @@ TEST(SensorNode, PreservesSensorIdentityAcrossTicks)
 {
     MotionSensor sensor(1);
     FakeUdpSender sender;
+    FakeLogger logger;
 
-    SensorNode node(sensor, sender);
+    SensorNode node(sensor, sender, logger);
 
     SensorReading first = node.tick();
     SensorReading second = node.tick();
@@ -69,8 +75,9 @@ TEST(SensorNode, TickProducesValidTimestamp)
 {
     MotionSensor sensor(1);
     FakeUdpSender sender;
+    FakeLogger logger;
 
-    SensorNode node(sensor, sender);
+    SensorNode node(sensor, sender, logger);
 
     SensorReading r1 = node.tick();
     SensorReading r2 = node.tick();
@@ -83,7 +90,9 @@ TEST(SensorNode, SendsMultiplePackets)
 {
     MotionSensor sensor(1);
     FakeUdpSender sender;
-    SensorNode node(sensor, sender);
+    FakeLogger logger;
+    
+    SensorNode node(sensor, sender, logger);
     const auto& packets = sender.getPackets();
 
     node.tick();

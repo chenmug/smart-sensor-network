@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 #include "network/TcpServer.hpp"
+#include "fakes/FakeLogger.hpp"
 
 
 TEST(TcpServer, ListCommandReturnsSensorIds)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     SensorReading r1{1, SensorType::Motion, SensorState::ACTIVE, 0.5, 100};
     SensorReading r2{2, SensorType::Motion, SensorState::ACTIVE, 0.7, 200};
@@ -12,7 +14,7 @@ TEST(TcpServer, ListCommandReturnsSensorIds)
     gateway.updateSensorInfo(r1);
     gateway.updateSensorInfo(r2);
 
-    TcpServer server(gateway, 8080);
+    TcpServer server(gateway, logger, 8080);
 
     std::string response = server.processRequest("list");
 
@@ -23,12 +25,13 @@ TEST(TcpServer, ListCommandReturnsSensorIds)
 
 TEST(TcpServer, ProcessRequest_GetValidSensor)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     SensorReading r{1, SensorType::Motion, SensorState::ACTIVE, 0.9, 200};
     gateway.updateSensorInfo(r);
 
-    TcpServer server(gateway, 8080);
+    TcpServer server(gateway, logger, 8080);
 
     std::string response = server.processRequest("get 1");
 
@@ -40,8 +43,9 @@ TEST(TcpServer, ProcessRequest_GetValidSensor)
 
 TEST(TcpServer, UnknownCommand)
 {
-    Gateway gateway;
-    TcpServer server(gateway, 8080);
+    FakeLogger logger;
+    Gateway gateway(logger);
+    TcpServer server(gateway, logger, 8080);
 
     std::string response = server.processRequest("hello");
 
@@ -51,8 +55,9 @@ TEST(TcpServer, UnknownCommand)
 
 TEST(TcpServer, ProcessRequest_SensorNotFound)
 {
-    Gateway gateway;
-    TcpServer server(gateway, 8080);
+    FakeLogger logger;
+    Gateway gateway(logger);
+    TcpServer server(gateway, logger, 8080);
 
     std::string response = server.processRequest("get 99");
 

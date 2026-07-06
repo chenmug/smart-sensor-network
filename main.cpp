@@ -1,20 +1,27 @@
+#include "gateway/Gateway.hpp"
+#include "network/UdpReceiver.hpp"
+#include "network/TcpServer.hpp"
 #include "sensor/MotionSensor.h"
 #include "sensor/SensorNode.hpp"
 #include "network/UdpSender.hpp"
-#include "network/UdpReceiver.hpp"
-#include "network/TcpServer.hpp"
-#include "gateway/Gateway.hpp"
+#include "monitor/Logger.hpp"
 #include <iostream>
 #include <thread>
+#include <atomic>
 
 
 int main()
 {
-    std::cout << "\n=== SMART SENSOR NETWORK DEMO START ===\n\n";
+    std::cout << "=== SMART SENSOR NETWORK DEMO START ===\n\n";
 
-    Gateway gateway;
-    UdpReceiver receiver(gateway, 9000);
-    TcpServer tcpServer(gateway, 8080);
+    Logger logger;
+    logger.start();
+
+    logger.log("[SYSTEM] Logger started");
+
+    Gateway gateway(logger);
+    UdpReceiver receiver(gateway, logger, 9000);
+    TcpServer tcpServer(gateway, logger, 8080);
 
     MotionSensor sensor1(1);
     MotionSensor sensor2(2);
@@ -22,39 +29,57 @@ int main()
     UdpSender sender1("127.0.0.1", 9000);
     UdpSender sender2("127.0.0.1", 9000);
 
-    SensorNode node1(sensor1, sender1);
-    SensorNode node2(sensor2, sender2);
+    SensorNode node1(sensor1, sender1, logger);
+    SensorNode node2(sensor2, sender2, logger);
 
-    node1.tick();
-    node2.tick();
-
-    std::cout << "\n[SYSTEM] Sensors initialized.\n";
-    std::cout << "[SYSTEM] Waiting for TCP client...\n";
+    std::atomic<bool> udpReady{false};
+    std::atomic<bool> tcpReady{false};
 
     std::thread udpThread([&]()
     {
-        std::cout << "[SYSTEM] UDP running\n";
+        logger.log("[SYSTEM] Starting UDP service");
+        udpReady = true;
         receiver.run();
     });
 
     std::thread tcpThread([&]()
     {
-        std::cout << "[SYSTEM] TCP running\n";
+        logger.log("[SYSTEM] Starting TCP service");
+        tcpReady = true;
         tcpServer.run();
     });
 
+    // Wait until ready
+    while (!udpReady || !tcpReady)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
-    std::cout << "\nPress ENTER to shutdown...\n";
+    logger.log("[SYSTEM] All services ready\n");
+
+    logger.log("[SYSTEM] Sensors initialized");
+
+    node1.tick();
+    node2.tick();
+
+    logger.log("[SYSTEM] Waiting for TCP client...");
+
+    // Wait 
+    logger.log("[SYSTEM] Press ENTER to shutdown...\n");
     std::cin.get();
 
-    std::cout << "\n[SYSTEM] Shutting down...\n";
+    // Shutdown
+    logger.log("[SYSTEM] Shutting down...");
 
     receiver.stop();
     tcpServer.stop();
 
-    // join all threads 
     udpThread.join();
     tcpThread.join();
+
+    logger.log("[SYSTEM] Shutdown complete");
+
+    logger.stop();
 
     std::cout << "\n=== SYSTEM SHUTDOWN COMPLETE ===\n";
 

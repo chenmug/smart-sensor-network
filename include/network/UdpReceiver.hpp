@@ -22,15 +22,17 @@ private:
     uint16_t port;                                        // UDP port on which the receiver listens
     int sockfd = -1;                                      // Socket file descriptor (-1 means not initialized)
     std::atomic<bool> running;                            // Controls main loop execution
+    ILogger& logger;                                      // Reference to the shared system logger used for thread-safe system logging.
 
 public:
     /**
      * @brief Constructs a UDP receiver bound to a specific port.
      *
      * @param gateway Reference to the Gateway that processes incoming packets
+     * @param logger Reference to the shared system Logger.
      * @param port UDP port to listen on
      */
-    UdpReceiver(Gateway& gateway, uint16_t port);
+    UdpReceiver(Gateway& gateway, ILogger& logger, uint16_t port);
 
     /**
      * @brief Receives a single UDP packet and forwards it to the Gateway.

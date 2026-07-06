@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 #include "network/UdpReceiver.hpp"
+#include "fakes/FakeLogger.hpp"
 
 
 TEST(UdpReceiver, ForwardsPacketToGateway)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
-    UdpReceiver receiver(gateway, 9000);
+    UdpReceiver receiver(gateway, logger, 9000);
 
     SensorReading r{10, SensorType::Motion, SensorState::ACTIVE, 0.42, 123};
 
@@ -24,7 +26,8 @@ TEST(UdpReceiver, ForwardsPacketToGateway)
 
 TEST(UdpReceiver, HandlesMultiplePackets)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     TelemetrySerializer serializer;
 
@@ -44,7 +47,8 @@ TEST(UdpReceiver, HandlesMultiplePackets)
 
 TEST(UdpReceiver, PacketOverwriteBehavior)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
     TelemetrySerializer serializer;
 
     SensorReading r1{1, SensorType::Motion, SensorState::ACTIVE, 0.1, 100};
@@ -62,7 +66,8 @@ TEST(UdpReceiver, PacketOverwriteBehavior)
 
 TEST(Gateway, MultipleSensorsAreStored)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     gateway.updateSensorInfo({1, SensorType::Motion, SensorState::ACTIVE, 0.1, 100});
     gateway.updateSensorInfo({2, SensorType::Motion, SensorState::WARNING, 0.2, 200});
@@ -80,7 +85,8 @@ TEST(Gateway, MultipleSensorsAreStored)
 
 TEST(Gateway, LastUpdateTimeIsRecorded)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
 
     SensorReading r{1, SensorType::Motion, SensorState::ACTIVE, 0.5, 100};
 
@@ -94,7 +100,8 @@ TEST(Gateway, LastUpdateTimeIsRecorded)
 
 TEST(Gateway, HandlePacketStoresCorrectReading)
 {
-    Gateway gateway;
+    FakeLogger logger;
+    Gateway gateway(logger);
     TelemetrySerializer serializer;
 
     SensorReading r{42, SensorType::Motion, SensorState::WARNING, 0.87, 555};

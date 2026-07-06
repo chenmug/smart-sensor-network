@@ -6,8 +6,8 @@
 
 // /*************** CONSTRUCTOR ***************/
 
-SensorNode::SensorNode(Sensor& sensor, IUdpSender& sender, std::chrono::milliseconds intervalMs)
-    : sensor(sensor), sender(sender), interval(intervalMs), running(false)
+SensorNode::SensorNode(Sensor& sensor, IUdpSender& sender, ILogger& logger, std::chrono::milliseconds intervalMs)
+    : sensor(sensor), sender(sender), logger(logger), interval(intervalMs), running(false)
 {}
 
 
@@ -18,8 +18,7 @@ SensorReading SensorNode::tick()
     sensor.collectData();
     const SensorReading reading = sensor.createTelemetry();
 
-    // Temporary debug logging - will be replaced by Monitor module
-    std::cout << "[SENSOR " << reading.sensorId << "] Sending telemetry...\n";
+    logger.log("[SENSOR " + std::to_string(reading.sensorId) + "] Sending telemetry...");
     
     auto data = serializer.serialize(reading);
     sender.send(data); 

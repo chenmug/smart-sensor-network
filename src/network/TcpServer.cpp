@@ -1,4 +1,5 @@
 #include "network/TcpServer.hpp"
+#include "common/SensorTypesString.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -11,8 +12,8 @@
 
 // /*************** CONSTRUCTOR ***************/
 
-TcpServer::TcpServer(Gateway& gateway, uint16_t port)
-    : gateway(gateway), running(false)
+TcpServer::TcpServer(Gateway& gateway,ILogger& logger, uint16_t port)
+    : gateway(gateway), logger(logger), running(false)
 {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -52,13 +53,13 @@ void TcpServer::run()
 {
     if (serverSocket < 0)
     {
-        std::cerr << "[TCP] Server not initialized\n";
+        logger.log("[TCP] Server not initialized");
         return;
     }
 
     running = true;
 
-    std::cout << "[TCP] Server started\n";
+    logger.log("[TCP] Server started");
 
     while (running)
     {
@@ -84,12 +85,12 @@ void TcpServer::run()
             continue;
         }
 
-        std::cout << "[TCP] Client connected\n";
+        logger.log("[TCP] Client connected");
 
         handleClient(clientSock);
         close(clientSock);
 
-         std::cout << "[TCP] Client disconnected\n";
+        logger.log("[TCP] Client disconnected");
     }
 }
 
@@ -148,6 +149,7 @@ void TcpServer::handleClient(int clientSock)
 
             if (sent <= 0) // error or disconnect
             {
+                logger.log("[TCP] Failed to send response");
                 return;
             }
 
@@ -169,7 +171,7 @@ std::string TcpServer::processRequest(const std::string& request)
         req.pop_back();
     }
 
-    std::cout << "[TCP] Command: " << request << std::endl;
+    logger.log("[TCP] Command: " + req);
 
     if (req == "list")
     {
@@ -182,7 +184,7 @@ std::string TcpServer::processRequest(const std::string& request)
             response += std::to_string(id) + " ";
         }
 
-        response += "\n";
+        response += "\n\n";
         return response;
     }
 
@@ -198,26 +200,30 @@ std::string TcpServer::processRequest(const std::string& request)
 
             if (it == sensors.end())
             {
+                logger.log("[TCP] Sensor " + std::to_string(id) + " not found");
                 return "sensor not found\n";
             }
 
             const auto& r = it->second.lastReading;
 
             std::ostringstream oss;
-            oss << "id=" << r.sensorId
-                << " value=" << r.value
-                << " state=" << static_cast<int>(r.state)
-                << " timestamp=" << r.timestamp_ms
-                << "\n";
+            oss << "=== SENSOR INFORMATION ===" << "\n"
+                << "id=" << r.sensorId << "\n"
+                << "value=" << r.value << "\n"
+                << "state=" << stringState(r.state) << "\n"
+                << "timestamp=" << r.timestamp_ms
+                << "\n\n";
 
             return oss.str();
         }
 
         catch (const std::exception&)
         {
+            logger.log("[TCP] Invalid sensor id");
             return "invalid sensor id\n";
         }
     }
 
+    logger.log("[TCP] Unknown command: " + req);
     return "unknown command\n";
 }

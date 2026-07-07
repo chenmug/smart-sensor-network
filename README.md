@@ -4,21 +4,24 @@
 
 A C++ project that simulates a network of embedded-inspired sensor devices communicating with a central gateway using UDP telemetry and a TCP monitoring interface.
 
-The project explores systems programming concepts including socket programming, multithreading, binary protocols, and embedded software architecture.
+The project explores systems programming concepts including socket programming, multithreading, synchronization, binary protocols, and embedded software architecture.
 
 ---
 
 ## Overview
 
+The system simulates a distributed sensor network where multiple sensor nodes generate telemetry data and communicate with a central Gateway.
+
 The current implementation includes:
 
-* Simulated sensor nodes generating telemetry
-* Binary serialization of sensor messages
+* Simulated sensor nodes generating telemetry data
+* Multiple sensor types (Motion and Temperature)
+* Binary serialization and deserialization of telemetry messages
 * UDP-based telemetry transmission
 * Central Gateway maintaining the latest state of each sensor
-* TCP server exposing a simple monitoring interface
+* TCP monitoring interface for querying sensor information
+* Thread-safe logging system with timestamped events
 * Unit tests for core components using GoogleTest
-
 
 ---
 
@@ -40,29 +43,42 @@ The current implementation includes:
 +-------------+
 | TCP Client  |
 +-------------+
+
+
+All components
+      |
+      v
++-------------+
+|   Logger    |
++-------------+
 ```
 
 ---
 
 ## Current Features
 
-* Sensor simulation
+* Sensor simulation framework
+* Multiple sensor implementations:
+      * Motion sensor
+      * Temperature sensor
 * UDP socket communication
 * TCP monitoring server
 * Binary telemetry protocol
+* Gateway-based sensor state management
 * Multithreaded execution
-* Gateway state management
-* GoogleTest unit tests
+* Synchronization using mutexes and condition variables
+* Thread-safe timestamped logging
+* Interface-based design for improved testability
+* GoogleTest unit tests for core components
 
 ---
 
 ## Planned Features
 
+* Additional sensor types (Pressure, Battery)
 * Heartbeat monitoring
-* Finite State Machines (FSM)
 * Offline sensor detection
 * Watchdog timers
-* Multiple sensor types (Temperature, Pressure, Battery)
 * Packet loss simulation
 * CRC validation
 * Prometheus metrics
@@ -78,6 +94,8 @@ The current implementation includes:
 * TCP/IP
 * UDP
 * Multithreading
+* Synchronization primitives (mutex, condition_variable)
+* Object-Oriented Design
 * CMake
 * GoogleTest
 
@@ -95,4 +113,6 @@ Rather than targeting specific hardware, the project simulates how embedded devi
 
 **Work in Progress**
 
-The networking infrastructure, telemetry pipeline, and monitoring interface are implemented. Additional embedded-oriented features such as heartbeat monitoring and fault detection are currently under development.
+The networking infrastructure, telemetry pipeline, sensor simulation framework, and monitoring interface are implemented.
+
+Additional embedded-oriented features such as heartbeat monitoring, offline detection, and watchdog mechanisms are currently under development.

@@ -59,8 +59,8 @@ All components
 
 * Sensor simulation framework
 * Multiple sensor implementations:
-      * Motion sensor
-      * Temperature sensor
+  * Motion sensor
+  * Temperature sensor
 * UDP socket communication
 * TCP monitoring server
 * Binary telemetry protocol

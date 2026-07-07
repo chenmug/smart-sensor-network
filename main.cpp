@@ -1,7 +1,7 @@
 #include "gateway/Gateway.hpp"
 #include "network/UdpReceiver.hpp"
 #include "network/TcpServer.hpp"
-#include "sensor/MotionSensor.h"
+#include "sensor/MotionSensor.hpp"
 #include "sensor/SensorNode.hpp"
 #include "network/UdpSender.hpp"
 #include "monitor/Logger.hpp"

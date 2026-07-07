@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "sensor/SensorNode.hpp"
-#include "sensor/MotionSensor.h"
+#include "sensor/MotionSensor.hpp"
 #include "fakes/FakeUdpSender.hpp"
 #include "fakes/FakeLogger.hpp"
 

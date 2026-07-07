@@ -1,4 +1,4 @@
-#include "sensor/MotionSensor.h"
+#include "sensor/MotionSensor.hpp"
 #include <random>
 
 

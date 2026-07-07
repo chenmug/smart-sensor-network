@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "sensor/MotionSensor.h"
+#include "sensor/MotionSensor.hpp"
 
 
 TEST(MotionSensor, ValueInRange)

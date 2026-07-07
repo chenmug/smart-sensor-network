@@ -1,6 +1,5 @@
 #include "monitor/Logger.hpp"
 #include "common/TimeUtils.hpp"
-#include <chrono>
 #include <iostream>
 
 
@@ -60,7 +59,6 @@ void Logger::run()
             lock.unlock();
 
             std::cout << "[" << currentTimeString() << "] " << msg << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1200));
 
             lock.lock();
         }

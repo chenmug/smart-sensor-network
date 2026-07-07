@@ -209,6 +209,7 @@ std::string TcpServer::processRequest(const std::string& request)
             std::ostringstream oss;
             oss << "=== SENSOR INFORMATION ===" << "\n"
                 << "id=" << r.sensorId << "\n"
+                << "type=" << stringType(r.type) << "\n"
                 << "value=" << r.value << "\n"
                 << "state=" << stringState(r.state) << "\n"
                 << "timestamp=" << r.timestamp_ms

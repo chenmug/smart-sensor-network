@@ -2,6 +2,7 @@
 #include "network/UdpReceiver.hpp"
 #include "network/TcpServer.hpp"
 #include "sensor/MotionSensor.hpp"
+#include "sensor/TemperatureSensor.hpp"
 #include "sensor/SensorNode.hpp"
 #include "network/UdpSender.hpp"
 #include "monitor/Logger.hpp"
@@ -26,11 +27,18 @@ int main()
     MotionSensor sensor1(1);
     MotionSensor sensor2(2);
 
+    TemperatureSensor sensor3(3);
+    TemperatureSensor sensor4(4);
+
     UdpSender sender1("127.0.0.1", 9000);
     UdpSender sender2("127.0.0.1", 9000);
+    UdpSender sender3("127.0.0.1", 9000);
+    UdpSender sender4("127.0.0.1", 9000);
 
     SensorNode node1(sensor1, sender1, logger);
     SensorNode node2(sensor2, sender2, logger);
+    SensorNode node3(sensor3, sender3, logger);
+    SensorNode node4(sensor4, sender4, logger);
 
     std::atomic<bool> udpReady{false};
     std::atomic<bool> tcpReady{false};
@@ -57,10 +65,12 @@ int main()
 
     logger.log("[SYSTEM] All services ready\n");
 
-    logger.log("[SYSTEM] Sensors initialized");
+    logger.log("[SYSTEM] Sensors created and initialized");
 
     node1.tick();
     node2.tick();
+    node3.tick();
+    node4.tick();
 
     logger.log("[SYSTEM] Waiting for TCP client...");
 

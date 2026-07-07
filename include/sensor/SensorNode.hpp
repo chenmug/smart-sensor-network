@@ -21,8 +21,7 @@ private:
     std::chrono::milliseconds interval;  // Time between sensor updates
     std::atomic<bool> running;           // Controls main loop execution
     TelemetrySerializer serializer;      // Converts telemetry data into bytes
-    ILogger& logger;                      // Reference to the shared system logger used for thread-safe system logging.
-
+    ILogger& logger;                     // Reference to the shared system logger used for thread-safe system logging.
 
 public:
     /**

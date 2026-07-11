@@ -25,6 +25,24 @@ The current implementation includes:
 
 ---
 
+## Why Both UDP and TCP?
+
+The project intentionally separates telemetry traffic from monitoring traffic, following a common architectural pattern used in embedded and distributed systems.
+
+### UDP Telemetry
+
+Sensor readings are transmitted over UDP because telemetry data favors low latency and minimal protocol overhead.
+
+In continuous telemetry streams, losing an occasional packet is often acceptable since newer measurements quickly replace older ones.
+
+### TCP Monitoring
+
+Monitoring commands use TCP because administrative communication requires reliable, ordered delivery.
+
+Examples include querying sensor status, requesting the latest readings, or inspecting the current state of the system.
+
+---
+
 ## Current Architecture
 
 ```text

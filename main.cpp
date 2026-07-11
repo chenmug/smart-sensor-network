@@ -4,6 +4,7 @@
 #include "sensor/MotionSensor.hpp"
 #include "sensor/TemperatureSensor.hpp"
 #include "sensor/BatterySensor.hpp"
+#include "sensor/PressureSensor.hpp"
 #include "sensor/SensorNode.hpp"
 #include "network/UdpSender.hpp"
 #include "monitor/Logger.hpp"
@@ -33,17 +34,21 @@ int main()
 
     BatterySensor sensor5(5);
 
+    PressureSensor sensor6(6);
+
     UdpSender sender1("127.0.0.1", 9000);
     UdpSender sender2("127.0.0.1", 9000);
     UdpSender sender3("127.0.0.1", 9000);
     UdpSender sender4("127.0.0.1", 9000);
     UdpSender sender5("127.0.0.1", 9000);
+    UdpSender sender6("127.0.0.1", 9000);
 
     SensorNode node1(sensor1, sender1, logger);
     SensorNode node2(sensor2, sender2, logger);
     SensorNode node3(sensor3, sender3, logger);
     SensorNode node4(sensor4, sender4, logger);
     SensorNode node5(sensor5, sender5, logger);
+    SensorNode node6(sensor6, sender6, logger);
 
     std::atomic<bool> udpReady{false};
     std::atomic<bool> tcpReady{false};
@@ -77,6 +82,7 @@ int main()
     node3.tick();
     node4.tick();
     node5.tick();
+    node6.tick();
 
     logger.log("[SYSTEM] Waiting for TCP client...");
 

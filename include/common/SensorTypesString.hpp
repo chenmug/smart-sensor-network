@@ -23,3 +23,14 @@ std::string stringType(SensorType type);
  * @return A string representing the given SensorState value.
  */
 std::string stringState(SensorState state);
+
+/**
+ * @brief Converts a MessageType enum value to its string representation.
+ *
+ * This function maps each MessageType enum value to a human-readable string.
+ * It is typically used for logging, debugging, and telemetry visualization.
+ *
+ * @param type The message type to convert.
+ * @return A string representing the given MessageType value.
+ */
+std::string stringMassegeType(MessageType type);

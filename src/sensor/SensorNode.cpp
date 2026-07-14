@@ -13,12 +13,12 @@ SensorNode::SensorNode(Sensor& sensor, IUdpSender& sender, ILogger& logger, std:
 
 // /****************** TICK *******************/
 
-SensorReading SensorNode::tick()
+TelemetryMessage SensorNode::tick()
 {
     sensor.collectData();
-    const SensorReading reading = sensor.createTelemetry();
+    const TelemetryMessage reading = sensor.createTelemetry();
 
-    logger.log("[SENSOR " + std::to_string(reading.sensorId) + "] Sending telemetry...");
+    logger.log("[SENSOR " + std::to_string(reading.header.sensorId) + "] Sending telemetry...");
     
     auto data = serializer.serialize(reading);
     sender.send(data); 

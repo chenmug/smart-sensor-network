@@ -25,7 +25,7 @@ TEST(TemperatureSensor, CollectDataUpdatesValue)
     TemperatureSensor sensor(1);
 
     double value = sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
     ASSERT_EQ(reading.value, value);
 }
@@ -36,7 +36,7 @@ TEST(TemperatureSensor, UpdatesStateCorrectly)
     TemperatureSensor sensor(1);
 
     double temperature = sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
     if (temperature < 30)
     {
@@ -58,11 +58,12 @@ TEST(TemperatureSensor, TelemetryFieldsAreValid)
     TemperatureSensor sensor(42);
 
     sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
-    EXPECT_EQ(reading.sensorId, 42);
+    EXPECT_EQ(reading.header.type, MessageType::TELEMETRY);
+    EXPECT_EQ(reading.header.sensorId, 42);
     EXPECT_EQ(reading.type, SensorType::Temperature);
     EXPECT_GT(reading.value, -20);
     EXPECT_LT(reading.value, 70);
-    EXPECT_NE(reading.timestamp_ms, 0);
+    EXPECT_NE(reading.header.timestamp_ms, 0);
 }

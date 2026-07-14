@@ -20,16 +20,17 @@ void Sensor::updateState(SensorState state)
 
 // /************* CREATE TELEMETRY *************/
 
-SensorReading Sensor::createTelemetry() 
+TelemetryMessage Sensor::createTelemetry() 
 {
-    SensorReading reading;
+    TelemetryMessage message;
 
-    reading.sensorId = sensorId;
-    reading.state = currentState;
-    reading.type = getType();
-    reading.value = currentValue;
-    reading.timestamp_ms = now();
+    message.header.type = MessageType::TELEMETRY;
+    message.header.sensorId = sensorId;
+    message.state = currentState;
+    message.type = getType();
+    message.value = currentValue;
+    message.header.timestamp_ms = now();
 
-    currentReading = reading;
-    return reading;
+    currentReading = message;
+    return message;
 }

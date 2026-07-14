@@ -13,9 +13,9 @@ TEST(SensorNode, TickProducesValidReading)
 
     SensorNode node(sensor, sender, logger, std::chrono::milliseconds(100));
 
-    SensorReading r = node.tick();
+    TelemetryMessage r = node.tick();
 
-    EXPECT_EQ(r.sensorId, 1);
+    EXPECT_EQ(r.header.sensorId, 1);
     EXPECT_GE(r.value, 0.0);
     EXPECT_LE(r.value, 1.0);
 }
@@ -45,7 +45,7 @@ TEST(SensorNode, TickUpdatesStateCorrectly)
 
     SensorNode node(sensor, sender, logger, std::chrono::milliseconds(100));
 
-    SensorReading r = node.tick();
+    TelemetryMessage r = node.tick();
 
     EXPECT_TRUE(
         r.state == SensorState::ACTIVE ||
@@ -62,10 +62,10 @@ TEST(SensorNode, PreservesSensorIdentityAcrossTicks)
 
     SensorNode node(sensor, sender, logger);
 
-    SensorReading first = node.tick();
-    SensorReading second = node.tick();
+    TelemetryMessage first = node.tick();
+    TelemetryMessage second = node.tick();
 
-    EXPECT_EQ(first.sensorId, second.sensorId);
+    EXPECT_EQ(first.header.sensorId, second.header.sensorId);
     EXPECT_EQ(first.type, second.type);
     EXPECT_NE(first.value, second.value);
 }
@@ -79,10 +79,10 @@ TEST(SensorNode, TickProducesValidTimestamp)
 
     SensorNode node(sensor, sender, logger);
 
-    SensorReading r1 = node.tick();
-    SensorReading r2 = node.tick();
+    TelemetryMessage r1 = node.tick();
+    TelemetryMessage r2 = node.tick();
 
-    EXPECT_TRUE(r2.timestamp_ms >= r1.timestamp_ms);
+    EXPECT_TRUE(r2.header.timestamp_ms >= r1.header.timestamp_ms);
 }
 
 
@@ -102,3 +102,28 @@ TEST(SensorNode, SendsMultiplePackets)
 }
 
 
+TEST(TelemetrySerializer, SerializeDeserializeTelemetry)
+{
+    TelemetryMessage original{
+        {
+            MessageType::TELEMETRY,
+            5,
+            12345
+        },
+        SensorType::Temperature,
+        SensorState::ACTIVE,
+        25.5
+    };
+
+
+    auto buffer = TelemetrySerializer::serialize(original);
+    auto result = TelemetrySerializer::deserialize(buffer);
+
+    EXPECT_EQ(result.header.type, MessageType::TELEMETRY);
+    EXPECT_EQ(result.header.sensorId, 5);
+    EXPECT_EQ(result.header.timestamp_ms, 12345);
+
+    EXPECT_EQ(result.type, SensorType::Temperature);
+    EXPECT_EQ(result.state, SensorState::ACTIVE);
+    EXPECT_DOUBLE_EQ(result.value, 25.5);
+}

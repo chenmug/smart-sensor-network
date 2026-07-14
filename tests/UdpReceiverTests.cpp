@@ -10,7 +10,16 @@ TEST(UdpReceiver, ForwardsPacketToGateway)
 
     UdpReceiver receiver(gateway, logger, 9000);
 
-    SensorReading r{10, SensorType::Motion, SensorState::ACTIVE, 0.42, 123};
+    TelemetryMessage r{
+    {
+        MessageType::TELEMETRY,
+        10,
+        123
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.42
+    };
 
     TelemetrySerializer serializer;
     auto packet = serializer.serialize(r);
@@ -31,8 +40,27 @@ TEST(UdpReceiver, HandlesMultiplePackets)
 
     TelemetrySerializer serializer;
 
-    SensorReading r1{1, SensorType::Motion, SensorState::ACTIVE, 0.1, 100};
-    SensorReading r2{2, SensorType::Motion, SensorState::ACTIVE, 0.9, 200};
+    TelemetryMessage r1{
+    {
+        MessageType::TELEMETRY,
+        1,
+        100
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.1
+    };
+    
+    TelemetryMessage r2{
+    {
+        MessageType::TELEMETRY,
+        2,
+        200
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.9
+    };
 
     gateway.handlePacket(serializer.serialize(r1));
     gateway.handlePacket(serializer.serialize(r2));
@@ -40,8 +68,8 @@ TEST(UdpReceiver, HandlesMultiplePackets)
     const auto& sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 2);
-    ASSERT_EQ(sensors.at(1).lastReading.sensorId, 1);
-    ASSERT_EQ(sensors.at(2).lastReading.sensorId, 2);
+    ASSERT_EQ(sensors.at(1).lastReading.header.sensorId, 1);
+    ASSERT_EQ(sensors.at(2).lastReading.header.sensorId, 2);
 }
 
 
@@ -51,8 +79,27 @@ TEST(UdpReceiver, PacketOverwriteBehavior)
     Gateway gateway(logger);
     TelemetrySerializer serializer;
 
-    SensorReading r1{1, SensorType::Motion, SensorState::ACTIVE, 0.1, 100};
-    SensorReading r2{1, SensorType::Motion, SensorState::WARNING, 0.9, 200};
+    TelemetryMessage r1{
+    {
+        MessageType::TELEMETRY,
+        1,
+        100
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.1
+    };
+    
+    TelemetryMessage r2{
+    {
+        MessageType::TELEMETRY,
+        1,
+        200
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.9
+    };
 
     gateway.handlePacket(serializer.serialize(r1));
     gateway.handlePacket(serializer.serialize(r2));
@@ -69,17 +116,17 @@ TEST(Gateway, MultipleSensorsAreStored)
     FakeLogger logger;
     Gateway gateway(logger);
 
-    gateway.updateSensorInfo({1, SensorType::Motion, SensorState::ACTIVE, 0.1, 100});
-    gateway.updateSensorInfo({2, SensorType::Motion, SensorState::WARNING, 0.2, 200});
-    gateway.updateSensorInfo({3, SensorType::Motion, SensorState::ACTIVE, 0.3, 300});
+    gateway.updateSensorInfo({{MessageType::TELEMETRY, 1, 100}, SensorType::Motion, SensorState::ACTIVE, 0.1});
+    gateway.updateSensorInfo({{MessageType::TELEMETRY, 2, 200}, SensorType::Motion, SensorState::WARNING, 0.2});
+    gateway.updateSensorInfo({{MessageType::TELEMETRY, 3, 300}, SensorType::Motion, SensorState::ACTIVE, 0.3});
 
     const auto& sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 3);
 
-    EXPECT_EQ(sensors.at(1).lastReading.sensorId, 1);
-    EXPECT_EQ(sensors.at(2).lastReading.sensorId, 2);
-    EXPECT_EQ(sensors.at(3).lastReading.sensorId, 3);
+    EXPECT_EQ(sensors.at(1).lastReading.header.sensorId, 1);
+    EXPECT_EQ(sensors.at(2).lastReading.header.sensorId, 2);
+    EXPECT_EQ(sensors.at(3).lastReading.header.sensorId, 3);
 }
 
 
@@ -88,7 +135,16 @@ TEST(Gateway, LastUpdateTimeIsRecorded)
     FakeLogger logger;
     Gateway gateway(logger);
 
-    SensorReading r{1, SensorType::Motion, SensorState::ACTIVE, 0.5, 100};
+    TelemetryMessage r{
+    {
+        MessageType::TELEMETRY,
+        1,
+        100
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.5
+    };
 
     gateway.updateSensorInfo(r);
 
@@ -104,7 +160,16 @@ TEST(Gateway, HandlePacketStoresCorrectReading)
     Gateway gateway(logger);
     TelemetrySerializer serializer;
 
-    SensorReading r{42, SensorType::Motion, SensorState::WARNING, 0.87, 555};
+    TelemetryMessage r{
+    {
+        MessageType::TELEMETRY,
+        42,
+        555
+    },
+    SensorType::Motion,
+    SensorState::WARNING,
+    0.87
+    };
 
     auto packet = serializer.serialize(r);
 
@@ -116,9 +181,10 @@ TEST(Gateway, HandlePacketStoresCorrectReading)
 
     const auto& stored = sensors.at(42).lastReading;
 
-    EXPECT_EQ(stored.sensorId, 42);
+    EXPECT_EQ(stored.header.type, MessageType::TELEMETRY);
+    EXPECT_EQ(stored.header.sensorId, 42);
     EXPECT_EQ(stored.type, SensorType::Motion);
     EXPECT_EQ(stored.state, SensorState::WARNING);
     EXPECT_DOUBLE_EQ(stored.value, 0.87);
-    EXPECT_EQ(stored.timestamp_ms, 555);
+    EXPECT_EQ(stored.header.timestamp_ms, 555);
 }

@@ -44,3 +44,11 @@ std::string stringState(SensorState state)
             return "UNKNOWN";
     }
 }
+
+
+// /*********** STRING MASSEGE TYPE ***********/
+
+std::string stringMassegeType(MessageType type)
+{
+    return (type == MessageType::TELEMETRY) ? "TELEMETRY" : "HEARTBEAT";
+}

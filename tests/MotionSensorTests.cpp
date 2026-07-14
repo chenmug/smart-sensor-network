@@ -17,7 +17,7 @@ TEST(MotionSensor, StateIsValid)
     MotionSensor sensor(1);
 
     sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
     EXPECT_TRUE(
         reading.state == SensorState::ACTIVE ||
@@ -31,13 +31,14 @@ TEST(MotionSensor, TelemetryFieldsAreValid)
     MotionSensor sensor(42);
 
     sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
-    EXPECT_EQ(reading.sensorId, 42);
+    EXPECT_EQ(reading.header.type, MessageType::TELEMETRY);
+    EXPECT_EQ(reading.header.sensorId, 42);
     EXPECT_EQ(reading.type, SensorType::Motion);
     EXPECT_GE(reading.value, 0.0);
     EXPECT_LE(reading.value, 1.0);
-    EXPECT_NE(reading.timestamp_ms, 0);
+    EXPECT_NE(reading.header.timestamp_ms, 0);
 }
 
 

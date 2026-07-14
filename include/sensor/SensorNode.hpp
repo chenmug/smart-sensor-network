@@ -40,9 +40,9 @@ public:
      * Collects sensor data, serializes it, and sends it over UDP.
      * Used for testing and controlled execution.
      *
-     * @return The telemetry reading produced during this cycle.
+     * @return The telemetry message produced during this cycle.
      */
-    SensorReading tick();
+    TelemetryMessage tick();
 
     /**
      * @brief Starts the sensor execution loop.

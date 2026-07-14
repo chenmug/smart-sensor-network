@@ -8,8 +8,27 @@ TEST(TcpServer, ListCommandReturnsSensorIds)
     FakeLogger logger;
     Gateway gateway(logger);
 
-    SensorReading r1{1, SensorType::Motion, SensorState::ACTIVE, 0.5, 100};
-    SensorReading r2{2, SensorType::Motion, SensorState::ACTIVE, 0.7, 200};
+    TelemetryMessage r1{
+    {
+        MessageType::TELEMETRY,
+        1,
+        100
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.5
+    };
+
+    TelemetryMessage r2{
+    {
+        MessageType::TELEMETRY,
+        2,
+        200
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.7
+    };
 
     gateway.updateSensorInfo(r1);
     gateway.updateSensorInfo(r2);
@@ -28,16 +47,29 @@ TEST(TcpServer, ProcessRequest_GetValidSensor)
     FakeLogger logger;
     Gateway gateway(logger);
 
-    SensorReading r{1, SensorType::Motion, SensorState::ACTIVE, 0.9, 200};
+    TelemetryMessage r{
+    {
+        MessageType::TELEMETRY,
+        1,
+        200
+    },
+    SensorType::Motion,
+    SensorState::ACTIVE,
+    0.9
+    };
+
     gateway.updateSensorInfo(r);
 
     TcpServer server(gateway, logger, 8080);
 
     std::string response = server.processRequest("get 1");
 
-    ASSERT_TRUE(response.find("id=1") != std::string::npos);
-    ASSERT_TRUE(response.find("value=0.9") != std::string::npos);
-    ASSERT_TRUE(response.find("timestamp=200") != std::string::npos);
+    ASSERT_TRUE(response.find("messageType : TELEMETRY") != std::string::npos);
+    ASSERT_TRUE(response.find("sensorId    : 1") != std::string::npos);
+    ASSERT_TRUE(response.find("timestamp   : 200") != std::string::npos);
+    ASSERT_TRUE(response.find("sensorType  : Motion") != std::string::npos);
+    ASSERT_TRUE(response.find("state       : ACTIVE") != std::string::npos);
+    ASSERT_TRUE(response.find("value       : 0.9") != std::string::npos);
 }
 
 

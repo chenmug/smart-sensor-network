@@ -75,7 +75,8 @@ int main()
 
     logger.log("[SYSTEM] All services ready\n");
 
-    logger.log("[SYSTEM] Sensors created and initialized");
+    logger.log("[SYSTEM] Sensors initialized");
+    logger.log("[SYSTEM] Sending initial telemetry");
 
     node1.tick();
     node2.tick();

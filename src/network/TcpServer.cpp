@@ -207,12 +207,18 @@ std::string TcpServer::processRequest(const std::string& request)
             const auto& r = it->second.lastReading;
 
             std::ostringstream oss;
-            oss << "=== SENSOR INFORMATION ===" << "\n"
-                << "id=" << r.sensorId << "\n"
-                << "type=" << stringType(r.type) << "\n"
-                << "value=" << r.value << "\n"
-                << "state=" << stringState(r.state) << "\n"
-                << "timestamp=" << r.timestamp_ms
+            oss << "=== SENSOR INFORMATION ===" << "\n\n"
+                << "Packet Header" << "\n"
+                << "--------------" << "\n"
+                << "messageType : " << stringMassegeType(r.header.type) << "\n"
+                << "sensorId    : " << r.header.sensorId << "\n"
+                << "timestamp   : " << r.header.timestamp_ms << "\n\n"
+
+                << "Telemetry Payload" << "\n"
+                << "-----------------" << "\n"
+                << "sensorType  : " << stringType(r.type) << "\n"
+                << "state       : " << stringState(r.state) << "\n"
+                << "value       : " << r.value << "\n"
                 << "\n\n";
 
             return oss.str();

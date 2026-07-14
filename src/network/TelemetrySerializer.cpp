@@ -39,10 +39,11 @@ namespace
 
 // /**************** SERIALIZE ****************/
 
-std::vector<uint8_t> TelemetrySerializer::serialize(const SensorReading& reading)
+std::vector<uint8_t> TelemetrySerializer::serialize(const TelemetryMessage& message)
 {
     std::vector<uint8_t> buffer;
     buffer.reserve(
+        sizeof(MessageType) +
         sizeof(uint32_t) + 
         sizeof(int) + 
         sizeof(int) +
@@ -50,11 +51,13 @@ std::vector<uint8_t> TelemetrySerializer::serialize(const SensorReading& reading
         sizeof(uint64_t)
     );
 
-    write(buffer, reading.sensorId);
-    write(buffer, static_cast<int>(reading.type));
-    write(buffer, static_cast<int>(reading.state));
-    write(buffer, reading.value);
-    write(buffer, reading.timestamp_ms);
+    write(buffer, static_cast<int>(message.header.type));
+    write(buffer, message.header.sensorId);
+    write(buffer, message.header.timestamp_ms);
+
+    write(buffer, static_cast<int>(message.type));
+    write(buffer, static_cast<int>(message.state));
+    write(buffer, message.value);
 
     return buffer;
 }
@@ -62,16 +65,18 @@ std::vector<uint8_t> TelemetrySerializer::serialize(const SensorReading& reading
 
 // /*************** DESERIALIZE ***************/
 
-SensorReading TelemetrySerializer::deserialize(const std::vector<uint8_t>& buffer)
+TelemetryMessage TelemetrySerializer::deserialize(const std::vector<uint8_t>& buffer)
 {
-    SensorReading reading;
+    TelemetryMessage message;
     size_t offset = 0;
     
-    reading.sensorId = read<uint32_t>(buffer, offset);
-    reading.type = static_cast<SensorType>(read<int>(buffer, offset));
-    reading.state = static_cast<SensorState>(read<int>(buffer, offset));
-    reading.value = read<double>(buffer, offset);
-    reading.timestamp_ms = read<uint64_t>(buffer, offset);
+    message.header.type = static_cast<MessageType>(read<int>(buffer, offset));
+    message.header.sensorId = read<uint32_t>(buffer, offset);
+    message.header.timestamp_ms = read<uint64_t>(buffer, offset);
+    
+    message.type = static_cast<SensorType>(read<int>(buffer, offset));
+    message.state = static_cast<SensorState>(read<int>(buffer, offset));
+    message.value = read<double>(buffer, offset);
 
-    return reading;
+    return message;
 }

@@ -79,6 +79,8 @@ All components
 * Multiple sensor implementations:
   * Motion sensor
   * Temperature sensor
+  * Pressure sensor
+  * Battery sensor
 * UDP socket communication
 * TCP monitoring server
 * Binary telemetry protocol
@@ -93,7 +95,6 @@ All components
 
 ## Planned Features
 
-* Additional sensor types (Pressure, Battery)
 * Heartbeat monitoring
 * Offline sensor detection
 * Watchdog timers

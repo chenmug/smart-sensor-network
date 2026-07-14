@@ -58,7 +58,7 @@ TEST(BatterySensor, CollectDataUpdatesValue)
     BatterySensor sensor(1);
 
     double value = sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
     ASSERT_EQ(reading.value, value);
 }
@@ -69,7 +69,7 @@ TEST(BatterySensor, UpdatesStateCorrectly)
     BatterySensor sensor(1);
 
     double battery = sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
     if (battery > 30)
     {
@@ -91,11 +91,12 @@ TEST(BatterySensor, TelemetryFieldsAreValid)
     BatterySensor sensor(42);
 
     sensor.collectData();
-    SensorReading reading = sensor.createTelemetry();
+    TelemetryMessage reading = sensor.createTelemetry();
 
-    EXPECT_EQ(reading.sensorId, 42);
+    EXPECT_EQ(reading.header.type, MessageType::TELEMETRY);
+    EXPECT_EQ(reading.header.sensorId, 42);
     EXPECT_EQ(reading.type, SensorType::Battery);
     EXPECT_GT(reading.value, 0.0);
     EXPECT_LT(reading.value, 100.0);
-    EXPECT_NE(reading.timestamp_ms, 0);
+    EXPECT_NE(reading.header.timestamp_ms, 0);
 }

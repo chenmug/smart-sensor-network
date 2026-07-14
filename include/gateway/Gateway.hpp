@@ -28,8 +28,8 @@ private:
      */
     struct SensorInfo
     {
-        SensorReading lastReading;  // The last telemetry reading received from this sensor.
-        uint64_t lastUpdateTime;    // Timestamp (milliseconds) when the gateway last received telemetry from this sensor.
+        TelemetryMessage lastReading;  // The last telemetry message received from this sensor.
+        uint64_t lastUpdateTime;       // Timestamp (milliseconds) when the gateway last received telemetry from this sensor.
     };
 
     std::unordered_map<uint32_t, SensorInfo> sensors;  // Registry of all sensors known to the gateway.
@@ -60,14 +60,14 @@ public:
     /**
      * @brief Updates the sensor info.
      *
-     * Stores the latest telemetry reading for a given sensor and updates its last update timestamp.
+     * Stores the latest telemetry message for a given sensor and updates its last update timestamp.
      *
      * - If sensor does not exist - it is created
-     * - If sensor exists - its state is overwritten with latest reading
+     * - If sensor exists - its state is overwritten with latest message
      *
-     * @param reading Decoded telemetry data from a sensor.
+     * @param message Decoded telemetry data from a sensor.
      */
-    void updateSensorInfo(const SensorReading& reading);
+    void updateSensorInfo(const TelemetryMessage& message);
 
     /**
      * @brief Provides read-only access to the internal sensor registry.

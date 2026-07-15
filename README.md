@@ -15,7 +15,7 @@ The system simulates a distributed sensor network where multiple sensor nodes ge
 The current implementation includes:
 
 * Simulated sensor nodes generating telemetry data
-* Multiple sensor types (Motion and Temperature)
+* Multiple sensor types (Motion, Temperature, Pressure, Battery)
 * Binary serialization and deserialization of telemetry messages
 * UDP-based telemetry transmission
 * Central Gateway maintaining the latest state of each sensor

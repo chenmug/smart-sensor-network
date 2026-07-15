@@ -29,7 +29,7 @@ TEST(UdpReceiver, ForwardsPacketToGateway)
     auto sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 1);
-    EXPECT_EQ(sensors.at(10).lastReading.value, 0.42);
+    EXPECT_EQ(sensors.at(10).lastTelemetry.value, 0.42);
 }
 
 
@@ -68,8 +68,8 @@ TEST(UdpReceiver, HandlesMultiplePackets)
     const auto& sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 2);
-    ASSERT_EQ(sensors.at(1).lastReading.header.sensorId, 1);
-    ASSERT_EQ(sensors.at(2).lastReading.header.sensorId, 2);
+    ASSERT_EQ(sensors.at(1).lastTelemetry.header.sensorId, 1);
+    ASSERT_EQ(sensors.at(2).lastTelemetry.header.sensorId, 2);
 }
 
 
@@ -107,7 +107,7 @@ TEST(UdpReceiver, PacketOverwriteBehavior)
     auto sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 1);
-    EXPECT_EQ(sensors.at(1).lastReading.value, 0.9);
+    EXPECT_EQ(sensors.at(1).lastTelemetry.value, 0.9);
 }
 
 
@@ -124,9 +124,9 @@ TEST(Gateway, MultipleSensorsAreStored)
 
     ASSERT_EQ(sensors.size(), 3);
 
-    EXPECT_EQ(sensors.at(1).lastReading.header.sensorId, 1);
-    EXPECT_EQ(sensors.at(2).lastReading.header.sensorId, 2);
-    EXPECT_EQ(sensors.at(3).lastReading.header.sensorId, 3);
+    EXPECT_EQ(sensors.at(1).lastTelemetry.header.sensorId, 1);
+    EXPECT_EQ(sensors.at(2).lastTelemetry.header.sensorId, 2);
+    EXPECT_EQ(sensors.at(3).lastTelemetry.header.sensorId, 3);
 }
 
 
@@ -150,7 +150,7 @@ TEST(Gateway, LastUpdateTimeIsRecorded)
 
     const auto& sensors = gateway.getSensors();
 
-    EXPECT_GT(sensors.at(1).lastUpdateTime, 0u);
+    EXPECT_GT(sensors.at(1).lastTelemetryTime, 0u);
 }
 
 
@@ -179,7 +179,7 @@ TEST(Gateway, HandlePacketStoresCorrectReading)
 
     ASSERT_EQ(sensors.size(), 1);
 
-    const auto& stored = sensors.at(42).lastReading;
+    const auto& stored = sensors.at(42).lastTelemetry;
 
     EXPECT_EQ(stored.header.type, MessageType::TELEMETRY);
     EXPECT_EQ(stored.header.sensorId, 42);

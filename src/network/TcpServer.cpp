@@ -204,7 +204,7 @@ std::string TcpServer::processRequest(const std::string& request)
                 return "sensor not found\n";
             }
 
-            const auto& r = it->second.lastReading;
+            const auto& r = it->second.lastTelemetry;
 
             std::ostringstream oss;
             oss << "=== SENSOR INFORMATION ===" << "\n\n"

@@ -16,23 +16,54 @@ Gateway::Gateway(ILogger& logger)
 
 void Gateway::handlePacket(const std::vector<uint8_t>& packet)
 {
-    TelemetryMessage reading = serializer.deserializeTelemetry(packet);
-    updateSensorInfo(reading);
+    switch (serializer.peekMessageType(packet))
+    {
+    case MessageType::TELEMETRY:
+    {
+        TelemetryMessage msg = serializer.deserializeTelemetry(packet);
+        updateSensorInfo(msg);
+        break;
+    }
+
+    case MessageType::HEARTBEAT:
+    {
+        HeartbeatMessage hb = serializer.deserializeHeartbeat(packet);
+        handleHeartbeat(hb);
+        break;
+    }
+
+    default:
+        logger.log("[GATEWAY] Unknown message type");
+        break;
+    }
 }
 
 
 // /************* UPDATE SENSOR INFO *************/
 
-void Gateway::updateSensorInfo(const TelemetryMessage& reading)
+void Gateway::updateSensorInfo(const TelemetryMessage& message)
 {
-    SensorInfo& info = sensors[reading.header.sensorId];
+    SensorInfo& info = sensors[message.header.sensorId];
     
-    info.lastReading = reading;
-    info.lastUpdateTime = now();
+    info.lastTelemetry = message;
+    info.lastTelemetryTime = now();
 
     logger.log("[GATEWAY] Updated sensor " +
-               std::to_string(reading.header.sensorId) +
-               " (" + to_string(reading.type) + ")");
+               std::to_string(message.header.sensorId) +
+               " (" + to_string(message.type) + ")");
+}
+
+
+// /************** HANDLE HEARTBEAT **************/
+
+void Gateway::handleHeartbeat(const HeartbeatMessage& message)
+{
+    SensorInfo& info = sensors[message.header.sensorId];
+
+    info.lastHeartbeatTime = now();
+
+    logger.log( "[GATEWAY] Heartbeat received from sensor " +
+                 std::to_string(message.header.sensorId));
 }
 
 
@@ -41,4 +72,12 @@ void Gateway::updateSensorInfo(const TelemetryMessage& reading)
 const std::unordered_map<uint32_t, Gateway::SensorInfo>& Gateway::getSensors() const
 {
     return sensors;
+}
+
+
+// /********** GET LAST HEARTBEAT TIME **********/
+
+uint64_t Gateway::getLastHeartbeatTime(uint32_t sensorId) const
+{
+    return sensors.at(sensorId).lastHeartbeatTime;
 }

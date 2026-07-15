@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "gateway/Gateway.hpp"
 #include "fakes/FakeLogger.hpp"
+#include "common/TimeUtils.hpp"
 
 
 TEST(Gateway, CreatesNewSensor)
@@ -22,7 +23,7 @@ TEST(Gateway, CreatesNewSensor)
     const auto& sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 1);
-    ASSERT_EQ(sensors.at(1).lastReading.header.sensorId, 1);
+    ASSERT_EQ(sensors.at(1).lastTelemetry.header.sensorId, 1);
     ASSERT_EQ(r.header.type, MessageType::TELEMETRY);
 }
 
@@ -56,16 +57,16 @@ TEST(Gateway, OverwritesExistingSensor)
 
     gateway.updateSensorInfo(r1);
 
-    ASSERT_EQ(gateway.getSensors().at(1).lastReading.value, 0.5);
-    ASSERT_EQ(gateway.getSensors().at(1).lastReading.header.timestamp_ms, 100);
+    ASSERT_EQ(gateway.getSensors().at(1).lastTelemetry.value, 0.5);
+    ASSERT_EQ(gateway.getSensors().at(1).lastTelemetry.header.timestamp_ms, 100);
 
     gateway.updateSensorInfo(r2); 
 
     const auto& sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 1);
-    ASSERT_EQ(sensors.at(1).lastReading.value, 0.9);
-    ASSERT_EQ(sensors.at(1).lastReading.header.timestamp_ms, 200);
+    ASSERT_EQ(sensors.at(1).lastTelemetry.value, 0.9);
+    ASSERT_EQ(sensors.at(1).lastTelemetry.header.timestamp_ms, 200);
 }
 
 
@@ -90,7 +91,7 @@ TEST(Gateway, UpdatesTimestamp)
     const auto& sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 1);
-    EXPECT_GT(sensors.at(2).lastUpdateTime, 0);
+    EXPECT_GT(sensors.at(2).lastTelemetryTime, 0);
 }
 
 
@@ -118,5 +119,112 @@ TEST(Gateway, HandlePacketUpdatesSensor)
     auto sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 1);
-    EXPECT_EQ(sensors.at(5).lastReading.header.sensorId, 5);
+    EXPECT_EQ(sensors.at(5).lastTelemetry.header.sensorId, 5);
+}
+
+
+TEST(Gateway, HandlesHeartbeat)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+    HeartbeatMessage hb;
+
+    hb.header.type = MessageType::HEARTBEAT;
+    hb.header.sensorId = 10;
+    hb.header.timestamp_ms = 123;
+
+    uint64_t before = now();
+
+    gateway.handleHeartbeat(hb);
+
+    uint64_t after = now();
+
+    auto sensors = gateway.getSensors();
+
+    ASSERT_EQ(sensors.size(), 1);
+
+    uint64_t heartbeatTime = gateway.getLastHeartbeatTime(10);
+
+    EXPECT_GE(heartbeatTime, before);
+    EXPECT_LE(heartbeatTime, after);
+}
+
+
+TEST(Gateway, HeartbeatDoesNotOverwriteTelemetry)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+    TelemetryMessage telemetry;
+    telemetry.header.sensorId = 5;
+    telemetry.header.type = MessageType::TELEMETRY;
+    telemetry.type = SensorType::Temperature;
+    telemetry.value = 25.0;
+
+    gateway.updateSensorInfo(telemetry);
+
+    HeartbeatMessage hb;
+    hb.header.type = MessageType::HEARTBEAT;
+    hb.header.sensorId = 5;
+
+    gateway.handleHeartbeat(hb);
+
+    const auto& sensors = gateway.getSensors();
+
+    EXPECT_EQ(sensors.at(5).lastTelemetry.value,25.0);
+}
+
+
+TEST(Gateway, HandlePacketProcessesHeartbeat)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+    PacketSerializer serializer;
+
+    HeartbeatMessage hb;
+    hb.header.type = MessageType::HEARTBEAT;
+    hb.header.sensorId = 7;
+    hb.header.timestamp_ms = 123;
+
+    auto packet = serializer.serialize(hb);
+
+    gateway.handlePacket(packet);
+
+    ASSERT_EQ(gateway.getSensors().size(), 1);
+
+    EXPECT_GT(gateway.getLastHeartbeatTime(7),0);
+}
+
+
+TEST(Gateway, HeartbeatUpdatesExistingSensor)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+    TelemetryMessage telemetry{
+        {MessageType::TELEMETRY, 3, 100},
+        SensorType::Temperature,
+        SensorState::ACTIVE,
+        22.5
+    };
+
+    gateway.updateSensorInfo(telemetry);
+
+    uint64_t oldTelemetryTime = gateway.getSensors().at(3).lastTelemetryTime;
+
+
+    HeartbeatMessage hb;
+    hb.header.type = MessageType::HEARTBEAT;
+    hb.header.sensorId = 3;
+
+    gateway.handleHeartbeat(hb);
+
+
+    const auto& sensor = gateway.getSensors().at(3);
+
+    EXPECT_EQ(sensor.lastTelemetry.value, 22.5);
+
+    EXPECT_GE(sensor.lastHeartbeatTime,oldTelemetryTime);
 }

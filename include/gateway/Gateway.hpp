@@ -6,76 +6,96 @@
 #include <cstdint>                          // For uint8_t, uint64_t
 #include <vector>                           // for std::vector
 
+
 /**
- * @brief Central system that receives telemetry from sensors and stores their state.
+ * @brief Central component responsible for receiving and processing sensor messages.
  *
- * Gateway acts as the entry point for all sensor data in the system.
- * It maintains the latest known state of each sensor.
+ * The Gateway acts as the entry point for all communication from sensor nodes.
+ * It receives incoming network packets, dispatches them according to their
+ * message type, and maintains the latest known state of every sensor.
  *
  * Responsibilities:
- * - Receiving incoming telemetry packets
- * - Decoding binary data into SensorReading objects
- * - Maintaining the latest state per sensor
+ * - Receiving incoming network packets
+ * - Decoding telemetry and heartbeat messages
+ * - Maintaining the latest telemetry for each sensor
+ * - Tracking the most recent heartbeat received from each sensor
  */
 class Gateway
 {
 private:
+
     /**
-     * @brief Internal representation of a single sensor's latest known state.
+     * @brief Internal representation of the latest information known about a sensor.
      *
-     * This structure stores the most recent telemetry information received
-     * from a given sensor, along with metadata about when it was last updated.
+     * This structure stores the most recent telemetry message received from a
+     * sensor together with timestamps used to monitor communication health.
      */
     struct SensorInfo
     {
-        TelemetryMessage lastReading;  // The last telemetry message received from this sensor.
-        uint64_t lastUpdateTime;       // Timestamp (milliseconds) when the gateway last received telemetry from this sensor.
+        TelemetryMessage lastTelemetry;  // Most recent telemetry message received from this sensor.
+        uint64_t lastTelemetryTime;      // Timestamp when the latest telemetry message was received.
+        uint64_t lastHeartbeatTime;      // Timestamp when the latest heartbeat message was received.
     };
 
-    std::unordered_map<uint32_t, SensorInfo> sensors;  // Registry of all sensors known to the gateway.
-    PacketSerializer serializer;                       // Converts bytes into telemetry data into 
-    ILogger& logger;                                   // Reference to the shared system logger used for thread-safe system logging.
-    
+    std::unordered_map<uint32_t, SensorInfo> sensors;  // Registry of all sensors known to the Gateway.
+    PacketSerializer serializer;                       // Serializes and deserializes protocol packets.
+    ILogger& logger;                                   // Shared thread-safe logger.
+
 public:
+
     /**
      * @brief Constructs a Gateway instance.
      *
      * Initializes the internal sensor registry and prepares the Gateway
-     * to receive and process sensor telemetry data.
+     * to receive and process incoming sensor messages.
      *
-     * @param logger Reference to the shared system Logger.
+     * @param logger Reference to the shared system logger.
      */
     Gateway(ILogger& logger);
 
     /**
-     * @brief Handles an incoming raw UDP packet.
+     * @brief Processes an incoming network packet.
      *
-     * This function is responsible for receiving binary telemetry data, decoding it into a 
-     * SensorReading object, and forwarding it to updateSensor().
+     * Determines the packet type, deserializes it into the appropriate
+     * message structure, and dispatches it to the corresponding handler.
      *
-     * @param packet Raw binary telemetry data received over UDP.
+     * @param packet Raw packet received from the network.
      */
     void handlePacket(const std::vector<uint8_t>& packet);
 
     /**
-     * @brief Updates the sensor info.
+     * @brief Updates the latest telemetry information for a sensor.
      *
-     * Stores the latest telemetry message for a given sensor and updates its last update timestamp.
+     * If the sensor is not already present in the registry, a new entry is
+     * created. Otherwise, the previous telemetry information is replaced by
+     * the newly received message.
      *
-     * - If sensor does not exist - it is created
-     * - If sensor exists - its state is overwritten with latest message
-     *
-     * @param message Decoded telemetry data from a sensor.
+     * @param message Decoded telemetry message.
      */
     void updateSensorInfo(const TelemetryMessage& message);
 
     /**
+     * @brief Processes a heartbeat message received from a sensor.
+     *
+     * Updates the timestamp of the latest heartbeat received from the sensor.
+     * This information is later used to detect offline devices.
+     *
+     * @param message Decoded heartbeat message.
+     */
+    void handleHeartbeat(const HeartbeatMessage& message);
+
+    /**
      * @brief Provides read-only access to the internal sensor registry.
      *
-     * This function is intended for testing and debugging purposes only,
-     * and exposes the current state of all sensors stored in the Gateway.
-     *
-     * @return Const reference to the map of sensor IDs and their latest state.
+     * @return Constant reference to the internal sensor registry.
      */
     const std::unordered_map<uint32_t, SensorInfo>& getSensors() const;
+
+    /**
+     * @brief Returns the last heartbeat time received from the sensor.
+     *
+     * @param sensorId The sensor uniqe identifier.
+     * @return The last heartbeat time.
+     */
+    uint64_t getLastHeartbeatTime(uint32_t sensorId) const;
 };

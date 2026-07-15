@@ -116,8 +116,8 @@ TEST(TelemetrySerializer, SerializeDeserializeTelemetry)
     };
 
 
-    auto buffer = TelemetrySerializer::serialize(original);
-    auto result = TelemetrySerializer::deserialize(buffer);
+    auto buffer = PacketSerializer::serialize(original);
+    auto result = PacketSerializer::deserializeTelemetry(buffer);
 
     EXPECT_EQ(result.header.type, MessageType::TELEMETRY);
     EXPECT_EQ(result.header.sensorId, 5);

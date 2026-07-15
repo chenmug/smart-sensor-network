@@ -1,6 +1,6 @@
 #include "gateway/Gateway.hpp"
 #include "common/TimeUtils.hpp"
-#include "network/TelemetrySerializer.hpp"
+#include "network/PacketSerializer.hpp"
 #include "common/SensorTypesString.hpp"  // For debugging 
 #include <iostream>                      // For debugging
 
@@ -16,7 +16,7 @@ Gateway::Gateway(ILogger& logger)
 
 void Gateway::handlePacket(const std::vector<uint8_t>& packet)
 {
-    TelemetryMessage reading = serializer.deserialize(packet);
+    TelemetryMessage reading = serializer.deserializeTelemetry(packet);
     updateSensorInfo(reading);
 }
 
@@ -32,7 +32,7 @@ void Gateway::updateSensorInfo(const TelemetryMessage& reading)
 
     logger.log("[GATEWAY] Updated sensor " +
                std::to_string(reading.header.sensorId) +
-               " (" + stringType(reading.type) + ")");
+               " (" + to_string(reading.type) + ")");
 }
 
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "sensor/Sensor.hpp"                // Forward Declaration
-#include "network/TelemetrySerializer.hpp"  // Forward Declaration
+#include "network/PacketSerializer.hpp"  // Forward Declaration
 #include "network/IUdpSender.hpp"           // Forward Declaration
 #include "monitor/ILogger.hpp"              // Forward Declaration
 #include <chrono>                           // For std::chrono::milliseconds
@@ -20,7 +20,7 @@ private:
     IUdpSender& sender;                  // Sends serialized telemetry packets over UDP
     std::chrono::milliseconds interval;  // Time between sensor updates
     std::atomic<bool> running;           // Controls main loop execution
-    TelemetrySerializer serializer;      // Converts telemetry data into bytes
+    PacketSerializer serializer;         // Converts packet data into bytes
     ILogger& logger;                     // Reference to the shared system logger used for thread-safe system logging.
 
 public:

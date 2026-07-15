@@ -210,14 +210,14 @@ std::string TcpServer::processRequest(const std::string& request)
             oss << "=== SENSOR INFORMATION ===" << "\n\n"
                 << "Packet Header" << "\n"
                 << "--------------" << "\n"
-                << "messageType : " << stringMassegeType(r.header.type) << "\n"
+                << "messageType : " << to_string(r.header.type) << "\n"
                 << "sensorId    : " << r.header.sensorId << "\n"
                 << "timestamp   : " << r.header.timestamp_ms << "\n\n"
 
                 << "Telemetry Payload" << "\n"
                 << "-----------------" << "\n"
-                << "sensorType  : " << stringType(r.type) << "\n"
-                << "state       : " << stringState(r.state) << "\n"
+                << "sensorType  : " << to_string(r.type) << "\n"
+                << "state       : " << to_string(r.state) << "\n"
                 << "value       : " << r.value << "\n"
                 << "\n\n";
 

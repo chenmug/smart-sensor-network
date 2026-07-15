@@ -1,5 +1,5 @@
 #pragma once
-#include "network/TelemetrySerializer.hpp"  // Forward Declaration
+#include "network/PacketSerializer.hpp"  // Forward Declaration
 #include "common/ProtocolTypes.hpp"         // Forward Declaration
 #include "monitor/ILogger.hpp"              // Forward Declaration
 #include <unordered_map>                    // For std::unordered_map
@@ -33,7 +33,7 @@ private:
     };
 
     std::unordered_map<uint32_t, SensorInfo> sensors;  // Registry of all sensors known to the gateway.
-    TelemetrySerializer serializer;                    // Converts bytes into telemetry data into 
+    PacketSerializer serializer;                       // Converts bytes into telemetry data into 
     ILogger& logger;                                   // Reference to the shared system logger used for thread-safe system logging.
     
 public:

@@ -21,7 +21,7 @@ TEST(UdpReceiver, ForwardsPacketToGateway)
     0.42
     };
 
-    TelemetrySerializer serializer;
+    PacketSerializer serializer;
     auto packet = serializer.serialize(r);
 
     // simulate receive (instead of real socket)
@@ -38,7 +38,7 @@ TEST(UdpReceiver, HandlesMultiplePackets)
     FakeLogger logger;
     Gateway gateway(logger);
 
-    TelemetrySerializer serializer;
+    PacketSerializer serializer;
 
     TelemetryMessage r1{
     {
@@ -77,7 +77,7 @@ TEST(UdpReceiver, PacketOverwriteBehavior)
 {
     FakeLogger logger;
     Gateway gateway(logger);
-    TelemetrySerializer serializer;
+    PacketSerializer serializer;
 
     TelemetryMessage r1{
     {
@@ -158,7 +158,7 @@ TEST(Gateway, HandlePacketStoresCorrectReading)
 {
     FakeLogger logger;
     Gateway gateway(logger);
-    TelemetrySerializer serializer;
+    PacketSerializer serializer;
 
     TelemetryMessage r{
     {

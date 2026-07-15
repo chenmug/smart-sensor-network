@@ -99,7 +99,7 @@ TEST(Gateway, HandlePacketUpdatesSensor)
     FakeLogger logger;
     Gateway gateway(logger);
 
-    TelemetrySerializer serializer;
+    PacketSerializer serializer;
     TelemetryMessage r{
     {
         MessageType::TELEMETRY,

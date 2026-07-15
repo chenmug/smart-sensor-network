@@ -11,7 +11,7 @@
  * @param type The sensor type to convert.
  * @return A string representing the given SensorType value.
  */
-std::string stringType(SensorType type);
+std::string to_string(SensorType type);
 
 /**
  * @brief Converts a SensorState enum value to its string representation.
@@ -22,7 +22,7 @@ std::string stringType(SensorType type);
  * @param state The sensor state to convert.
  * @return A string representing the given SensorState value.
  */
-std::string stringState(SensorState state);
+std::string to_string(SensorState state);
 
 /**
  * @brief Converts a MessageType enum value to its string representation.
@@ -33,4 +33,4 @@ std::string stringState(SensorState state);
  * @param type The message type to convert.
  * @return A string representing the given MessageType value.
  */
-std::string stringMassegeType(MessageType type);
+std::string to_string(MessageType type);

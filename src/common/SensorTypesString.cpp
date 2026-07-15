@@ -3,7 +3,7 @@
 
 // /*************** STRING TYPE ***************/
 
-std::string stringType(SensorType type)
+std::string to_string(SensorType type)
 {
     switch(type)
     {
@@ -27,7 +27,7 @@ std::string stringType(SensorType type)
 
 // /************** STRING STATE ***************/
 
-std::string stringState(SensorState state)
+std::string to_string(SensorState state)
 {
     switch(state)
     {
@@ -48,7 +48,7 @@ std::string stringState(SensorState state)
 
 // /*********** STRING MASSEGE TYPE ***********/
 
-std::string stringMassegeType(MessageType type)
+std::string to_string(MessageType type)
 {
     return (type == MessageType::TELEMETRY) ? "TELEMETRY" : "HEARTBEAT";
 }

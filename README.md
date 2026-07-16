@@ -16,9 +16,10 @@ The current implementation includes:
 
 * Simulated sensor nodes generating telemetry data
 * Multiple sensor types (Motion, Temperature, Pressure, Battery)
-* Binary serialization and deserialization of telemetry messages
-* UDP-based telemetry transmission
+* Binary serialization and deserialization of telemetry and heartbeat messages
+* UDP-based telemetry and heartbeat transmission
 * Central Gateway maintaining the latest state of each sensor
+* Heartbeat tracking for sensor health monitoring
 * TCP monitoring interface for querying sensor information
 * Thread-safe logging system with timestamped events
 * Unit tests for core components using GoogleTest
@@ -46,21 +47,25 @@ Examples include querying sensor status, requesting the latest readings, or insp
 ## Current Architecture
 
 ```text
-+-------------+
-| Sensor Node |
-+-------------+
-      |
-      | UDP
-      v
-+-------------+
-|   Gateway   |
-+-------------+
-      ^
-      | TCP
-      |
-+-------------+
-| TCP Client  |
-+-------------+
+        SensorNode
+            |
+    +----------------+
+    |                |
+Telemetry        Heartbeat
+(periodic)       (periodic)
+    |                |
+    UDP              UDP
+    |                |
+    +-------+--------+
+            |
+            v
+        Gateway
+            |
+            | TCP
+            v
+     +-------------+
+     | TCP Client  |
+     +-------------+
 
 
 All components
@@ -69,6 +74,40 @@ All components
 +-------------+
 |   Logger    |
 +-------------+
+```
+
+---
+
+## Monitoring Interface
+
+The system exposes a TCP monitoring interface that allows querying the current state of connected sensors.
+
+Example:
+
+```text
+$ nc 127.0.0.1 8080
+
+list
+1 2 3 4 5 6
+
+get 2
+=== SENSOR INFORMATION ===
+
+Packet Header
+--------------
+messageType : TELEMETRY
+sensorId    : 2
+timestamp   : 1784213736100
+
+Telemetry Payload
+-----------------
+sensorType  : Motion
+state       : ACTIVE
+value       : 0.879716
+
+Heartbeat Status
+----------------
+lastHeartbeat : 1784213736100
 ```
 
 ---
@@ -83,11 +122,12 @@ All components
   * Battery sensor
 * UDP socket communication
 * TCP monitoring server
-* Binary telemetry protocol
+* Binary packet protocol supporting telemetry and heartbeat messages
 * Gateway-based sensor state management
 * Multithreaded execution
 * Synchronization using mutexes and condition variables
 * Thread-safe timestamped logging
+* Heartbeat messaging and heartbeat timestamp tracking
 * Interface-based design for improved testability
 * GoogleTest unit tests for core components
 
@@ -95,8 +135,7 @@ All components
 
 ## Planned Features
 
-* Heartbeat monitoring
-* Offline sensor detection
+* Sensor offline detection based on heartbeat timeout
 * Watchdog timers
 * Packet loss simulation
 * CRC validation
@@ -134,4 +173,4 @@ Rather than targeting specific hardware, the project simulates how embedded devi
 
 The networking infrastructure, telemetry pipeline, sensor simulation framework, and monitoring interface are implemented.
 
-Additional embedded-oriented features such as heartbeat monitoring, offline detection, and watchdog mechanisms are currently under development.
+Additional embedded-oriented features such as heartbeat-based offline detection, watchdog mechanisms, and protocol reliability improvements are planned.

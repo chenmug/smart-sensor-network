@@ -205,6 +205,7 @@ std::string TcpServer::processRequest(const std::string& request)
             }
 
             const auto& r = it->second.lastTelemetry;
+            const auto& info = it->second;
 
             std::ostringstream oss;
             oss << "=== SENSOR INFORMATION ===" << "\n\n"
@@ -218,8 +219,11 @@ std::string TcpServer::processRequest(const std::string& request)
                 << "-----------------" << "\n"
                 << "sensorType  : " << to_string(r.type) << "\n"
                 << "state       : " << to_string(r.state) << "\n"
-                << "value       : " << r.value << "\n"
-                << "\n\n";
+                << "value       : " << r.value << "\n\n"
+
+                << "Heartbeat Status" << "\n"
+                << "----------------" << "\n"
+                << "lastHeartbeat : " << info.lastHeartbeatTime << "\n\n\n";
 
             return oss.str();
         }

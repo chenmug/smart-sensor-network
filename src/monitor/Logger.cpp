@@ -58,7 +58,14 @@ void Logger::run()
 
             lock.unlock();
 
-            std::cout << "[" << currentTimeString() << "] " << msg << std::endl;
+            if (msg == "\n")
+            {
+                std::cout << msg << std::endl;
+            }
+            else
+            {
+                std::cout << "[" << currentTimeString() << "] " << msg << std::endl;
+            }
 
             lock.lock();
         }

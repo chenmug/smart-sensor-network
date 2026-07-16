@@ -3,6 +3,7 @@
 #include "sensor/MotionSensor.hpp"
 #include "fakes/FakeUdpSender.hpp"
 #include "fakes/FakeLogger.hpp"
+#include "common/TimeUtils.hpp"
 
 
 TEST(SensorNode, TickProducesValidReading)
@@ -115,7 +116,6 @@ TEST(TelemetrySerializer, SerializeDeserializeTelemetry)
         25.5
     };
 
-
     auto buffer = PacketSerializer::serialize(original);
     auto result = PacketSerializer::deserializeTelemetry(buffer);
 
@@ -126,4 +126,69 @@ TEST(TelemetrySerializer, SerializeDeserializeTelemetry)
     EXPECT_EQ(result.type, SensorType::Temperature);
     EXPECT_EQ(result.state, SensorState::ACTIVE);
     EXPECT_DOUBLE_EQ(result.value, 25.5);
+}
+
+
+TEST(SensorNode, SendsHeartbeat)
+{
+    FakeLogger logger;
+    FakeUdpSender sender;
+    MotionSensor sensor(10);
+
+    SensorNode node(sensor, sender, logger);
+
+    node.sendHeartbeat();
+
+    const auto& packets = sender.getPackets();
+
+    ASSERT_EQ(packets.size(), 1);
+
+    MessageType type = PacketSerializer::peekMessageType(packets[0]);
+
+    EXPECT_EQ(type, MessageType::HEARTBEAT);
+}
+
+
+TEST(SensorNode, HeartbeatContainsCorrectSensorId)
+{
+    FakeLogger logger;
+    FakeUdpSender sender;
+    MotionSensor sensor(42);
+
+    SensorNode node(sensor, sender, logger);
+
+    node.sendHeartbeat();
+
+    const auto& packets = sender.getPackets();
+
+    ASSERT_EQ(packets.size(), 1);
+
+    HeartbeatMessage heartbeat = PacketSerializer::deserializeHeartbeat(packets[0]);
+
+    EXPECT_EQ(heartbeat.header.sensorId, 42);
+}
+
+
+TEST(SensorNode, HeartbeatContainsValidTimestamp)
+{
+    FakeLogger logger;
+    FakeUdpSender sender;
+    MotionSensor sensor(1);
+
+    SensorNode node(sensor, sender, logger);
+
+    uint64_t before = now();
+
+    node.sendHeartbeat();
+
+    uint64_t after = now();
+
+    const auto& packets = sender.getPackets();
+
+    ASSERT_EQ(packets.size(), 1);
+
+    HeartbeatMessage heartbeat = PacketSerializer::deserializeHeartbeat(packets[0]);
+
+    EXPECT_GE(heartbeat.header.timestamp_ms, before);
+    EXPECT_LE(heartbeat.header.timestamp_ms, after);
 }

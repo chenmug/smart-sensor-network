@@ -76,7 +76,7 @@ int main()
     logger.log("[SYSTEM] All services ready\n");
 
     logger.log("[SYSTEM] Sensors initialized");
-    logger.log("[SYSTEM] Sending initial telemetry");
+    logger.log("[SYSTEM] Sending initial telemetry packets");
 
     node1.tick();
     node2.tick();
@@ -84,6 +84,20 @@ int main()
     node4.tick();
     node5.tick();
     node6.tick();
+
+    logger.log("\n");
+
+    logger.log("[SYSTEM] Sending initial heartbeats");
+
+    node1.sendHeartbeat();
+    node2.sendHeartbeat();
+    node3.sendHeartbeat();
+    node4.sendHeartbeat();
+    node5.sendHeartbeat();
+    node6.sendHeartbeat();
+
+    // Give the UDP receiver time to process all packets
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     logger.log("[SYSTEM] Waiting for TCP client...");
 

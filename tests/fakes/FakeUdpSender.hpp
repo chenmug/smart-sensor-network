@@ -21,7 +21,7 @@ public:
      *
      * This function stores the packet in an internal container for later inspection.
      *
-     * @param data Binary telemetry packet that would have been sent over UDP.
+     * @param @param data Binary packet that would have been sent over UDP.
      */
     void send(const std::vector<uint8_t>& data) override
     {

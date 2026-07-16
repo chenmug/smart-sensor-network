@@ -6,7 +6,7 @@
 // /*************** CONSTRUCTOR ***************/
 
 Sensor::Sensor(uint32_t id)
-    : sensorId(id), currentState(SensorState::ACTIVE), lastHeartbeatTime(0)
+    : sensorId(id), currentState(SensorState::ACTIVE)
 {}
 
 
@@ -33,4 +33,12 @@ TelemetryMessage Sensor::createTelemetry()
 
     currentReading = message;
     return message;
+}
+
+
+// /***************** GET ID ******************/
+
+uint32_t Sensor::getId() const
+{
+    return sensorId;
 }

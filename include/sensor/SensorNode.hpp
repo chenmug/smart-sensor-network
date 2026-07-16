@@ -16,12 +16,13 @@
 class SensorNode
 {
 private:
-    Sensor& sensor;                      // External sensor used to collect telemetry data
-    IUdpSender& sender;                  // Sends serialized telemetry packets over UDP
-    std::chrono::milliseconds interval;  // Time between sensor updates
-    std::atomic<bool> running;           // Controls main loop execution
-    PacketSerializer serializer;         // Converts packet data into bytes
-    ILogger& logger;                     // Reference to the shared system logger used for thread-safe system logging.
+    Sensor& sensor;                               // External sensor used to collect telemetry data
+    IUdpSender& sender;                           // Sends serialized telemetry packets over UDP
+    std::chrono::milliseconds telemetryInterval;  // Time between telemetry sensor updates
+    std::chrono::milliseconds heartbeatInterval;  // Time between heartbeat sensor updates
+    std::atomic<bool> running;                    // Controls main loop execution
+    PacketSerializer serializer;                  // Converts packet data into bytes
+    ILogger& logger;                              // Reference to the shared system logger used for thread-safe system logging.
 
 public:
     /**
@@ -30,9 +31,12 @@ public:
      * @param sensor Pointer to a sensor instance.
      * @param sender UDP sender responsible for transmission.
      * @param logger Reference to the shared system Logger.
-     * @param intervalMs Time between telemetry transmissions.
+     * @param telemetryInterval Time between telemetry transmissions.
+     * @param heartbeatInterval Time between heartbeats.
      */
-    SensorNode(Sensor& sensor, IUdpSender& sender, ILogger& logger, std::chrono::milliseconds intervalMs = std::chrono::milliseconds(500));
+    SensorNode(Sensor& sensor, IUdpSender& sender, ILogger& logger, 
+        std::chrono::milliseconds telemetryInterval = std::chrono::milliseconds(500),
+        std::chrono::milliseconds heartbeatInterval = std::chrono::milliseconds(5000));
     
     /**
      * @brief Executes a single sensor cycle (one iteration of the pipeline).
@@ -55,4 +59,12 @@ public:
      * @brief Stops the sensor loop safely.
      */
     void stop();
+
+    /**
+     * @brief Sends a heartbeat message to the Gateway.
+     *
+     * Creates a heartbeat packet containing the sensor identifier
+     * and current timestamp, then transmits it through the UDP sender.
+     */
+    void sendHeartbeat();
 };

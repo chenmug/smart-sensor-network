@@ -1,6 +1,7 @@
 #pragma once
 #include "gateway/Gateway.hpp"  // Forward Declaration
 #include "monitor/ILogger.hpp"  // Forward Declaration
+#include "monitor/Monitor.hpp"  // Forward Declaration
 #include <atomic>               // For std::atomic
 #include <string>               // For std::string
 
@@ -26,6 +27,7 @@ private:
     
     static constexpr std::size_t MAX_PACKET_SIZE = 1024;  // Maximum supported TCP request size (bytes).
     Gateway& gateway;                                     // Reference to the central Gateway storing the latest sensor state.
+    Monitor monitor;                                      // Formats monitoring responses.
     int serverSocket = -1;                                // File descriptor of the listening TCP socket (-1 indicates an invalid socket).
     std::atomic<bool> running;                            // Controls whether the server's main loop continues accepting clients.
     ILogger& logger;                                      // Reference to the shared system logger used for thread-safe system logging.
@@ -99,4 +101,17 @@ private:
      * @param clientSock Connected client socket file descriptor.
      */
     void handleClient(int clientSock);
+
+    /**
+     * @brief Extracts a sensor identifier from a TCP command.
+     *
+     * Parses the sensor ID argument from a command string and converts it into an unsigned integer identifier.
+     *
+     * @param request TCP command containing a sensor identifier.
+     *  
+     * @throws std::invalid_argument If the command does not contain a valid ID.
+     *
+     * @return Parsed sensor identifier.
+     */
+    uint32_t parseId(const std::string& request) const;
 };

@@ -171,6 +171,21 @@ int main()
 
     logger.log("[SYSTEM] Waiting for TCP client...");
     logger.log("[SYSTEM] Press ENTER to shutdown...\n");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(SENSOR_HEARTBEAT_TIMEOUT_MS + 4000));
+
+
+    // ----------- Simulate Sensor Recovery -----------
+
+    logger.log("[SYSTEM] Recovering sensor 3");
+
+    node3.sendHeartbeat();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    logger.log("[SYSTEM] Sensor 3 recovery completed\n");
+
+
     std::cin.get();
 
 

@@ -3,18 +3,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <cstring>
 #include <fcntl.h>
 #include <iostream>
-#include <iomanip>
-#include <sstream>
 #include <thread>
 
 
 // /*************** CONSTRUCTOR ***************/
 
 TcpServer::TcpServer(Gateway& gateway,ILogger& logger, uint16_t port)
-    : gateway(gateway), logger(logger), running(false)
+    : gateway(gateway), monitor(gateway), logger(logger), running(false)
 {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -176,87 +173,45 @@ std::string TcpServer::processRequest(const std::string& request)
 
     if (req == "list")
     {
-        const auto& sensors = gateway.getSensors();
-
-        std::ostringstream oss;
-
-        oss << "=== SENSOR LIST ===\n\n";
-
-        oss << std::left
-            << std::setw(6)  << "ID"
-            << std::setw(15) << "TYPE"
-            << std::setw(12) << "STATE"
-            << std::setw(12) << "HEALTH"
-            << "LAST HB\n";
-
-        oss << "-----------------------------------------------------\n";
-
-        for (const auto& [id, info] : sensors)
-        {
-            const auto& telemetry = info.lastTelemetry;
-
-            oss << std::left
-                << std::setw(6)  << id
-                << std::setw(15) << to_string(telemetry.type)
-                << std::setw(12) << to_string(telemetry.state)
-                << std::setw(12) << to_string(info.health)
-                << gateway.getSecondsSinceLastHeartbeat(id)
-                << " sec\n";
-        }
-
-        oss << "\n\n";
-
-        return oss.str();
+        return monitor.sensorList();
     }
 
     if (req.rfind("get ", 0) == 0)
     {
-        const auto& sensors = gateway.getSensors();
-
         try
         {
-            uint32_t id = static_cast<uint32_t>(std::stoi(req.substr(4)));
-
-            auto it = sensors.find(id);
-
-            if (it == sensors.end())
+            uint32_t id = parseId(req);
+            if (id >= gateway.getSensors().size())
             {
                 logger.log("[TCP] Sensor " + std::to_string(id) + " not found");
-                return "sensor not found\n";
             }
-
-            const auto& r = it->second.lastTelemetry;
-            const auto& info = it->second;
-
-            std::ostringstream oss;
-            oss << "=== SENSOR INFORMATION ===" << "\n\n"
-                << "Packet Header" << "\n"
-                << "--------------" << "\n"
-                << "messageType : " << to_string(r.header.type) << "\n"
-                << "sensorId    : " << r.header.sensorId << "\n"
-                << "timestamp   : " << r.header.timestamp_ms << "\n\n"
-
-                << "Telemetry Payload" << "\n"
-                << "-----------------" << "\n"
-                << "sensorType  : " << to_string(r.type) << "\n"
-                << "state       : " << to_string(r.state) << "\n"
-                << "value       : " << r.value << "\n\n"
-
-                << "Heartbeat Status" << "\n"
-                << "----------------" << "\n"
-                << "health         : " << to_string(info.health) << "\n"
-                << "last heartbeat : " << gateway.getSecondsSinceLastHeartbeat(r.header.sensorId) << " sec ago" << "\n\n\n";
-
-            return oss.str();
+            
+            return monitor.sensorDetails(id);
         }
-
         catch (const std::exception&)
         {
             logger.log("[TCP] Invalid sensor id");
             return "invalid sensor id\n";
-        }
+        }  
     }
 
     logger.log("[TCP] Unknown command: " + req);
     return "unknown command\n";
+}
+
+
+// /**************** PARSE ID ******************/
+
+uint32_t TcpServer::parseId(const std::string& request) const
+{
+    constexpr std::size_t prefixLength = 4; 
+
+    int id = std::stoi(request.substr(prefixLength));
+
+    if (id <= 0)
+    {
+        throw std::invalid_argument("Invalid sensor id");
+    }
+
+    return static_cast<uint32_t>(id);
 }

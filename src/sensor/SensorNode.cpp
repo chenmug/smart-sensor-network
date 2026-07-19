@@ -22,7 +22,7 @@ TelemetryMessage SensorNode::tick()
     sensor.collectData();
     const TelemetryMessage reading = sensor.createTelemetry();
 
-    logger.log("[SENSOR " + std::to_string(reading.header.sensorId) + "] Sending telemetry...");
+    // logger.log("[SENSOR " + std::to_string(reading.header.sensorId) + "] Sending telemetry...");
     
     auto data = serializer.serialize(reading);
     sender.send(data); 
@@ -80,8 +80,6 @@ void SensorNode::sendHeartbeat()
     heartbeat.header.type = MessageType::HEARTBEAT;
     heartbeat.header.sensorId = sensor.getId();
     heartbeat.header.timestamp_ms = now();
-
-    logger.log("[SENSOR " + std::to_string(heartbeat.header.sensorId) + "] Sending heartbeat...");
 
     auto data = serializer.serialize(heartbeat);
 

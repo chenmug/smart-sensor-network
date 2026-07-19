@@ -150,7 +150,7 @@ TEST(Gateway, LastUpdateTimeIsRecorded)
 
     const auto& sensors = gateway.getSensors();
 
-    EXPECT_GT(sensors.at(1).lastTelemetryTime, 0u);
+    EXPECT_GT(sensors.at(1).lastTelemetryReceivedTime, 0u);
 }
 
 

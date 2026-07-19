@@ -1,10 +1,11 @@
 #pragma once
 #include "network/PacketSerializer.hpp"  // Forward Declaration
-#include "common/ProtocolTypes.hpp"         // Forward Declaration
-#include "monitor/ILogger.hpp"              // Forward Declaration
-#include <unordered_map>                    // For std::unordered_map
-#include <cstdint>                          // For uint8_t, uint64_t
-#include <vector>                           // for std::vector
+#include "common/ProtocolTypes.hpp"      // Forward Declaration
+#include "monitor/ILogger.hpp"           // Forward Declaration
+#include <unordered_map>                 // For std::unordered_map
+#include <cstdint>                       // For uint8_t, uint64_t
+#include <vector>                        // for std::vector
+#include <mutex>                         // For std::mutex  
 
 
 /**
@@ -27,19 +28,21 @@ private:
     /**
      * @brief Internal representation of the latest information known about a sensor.
      *
-     * This structure stores the most recent telemetry message received from a
-     * sensor together with timestamps used to monitor communication health.
+     * Stores the most recent telemetry data, communication timestamps, and current
+     * health status of a sensor as observed by the Gateway.
      */
     struct SensorInfo
     {
-        TelemetryMessage lastTelemetry;  // Most recent telemetry message received from this sensor.
-        uint64_t lastTelemetryTime;      // Timestamp when the latest telemetry message was received.
-        uint64_t lastHeartbeatTime;      // Timestamp when the latest heartbeat message was received.
+        TelemetryMessage lastTelemetry{};             // Most recent telemetry message received from this sensor.
+        uint64_t lastTelemetryReceivedTime = 0;       // Timestamp when the latest telemetry message was received.
+        uint64_t lastHeartbeatReceivedTime = 0;       // Timestamp when the latest heartbeat message was received.
+        SensorHealth health = SensorHealth::UNKNOWN;  // Initial state before receiving the first heartbeat.
     };
 
     std::unordered_map<uint32_t, SensorInfo> sensors;  // Registry of all sensors known to the Gateway.
     PacketSerializer serializer;                       // Serializes and deserializes protocol packets.
     ILogger& logger;                                   // Shared thread-safe logger.
+    mutable std::mutex mtx;                            // Protect Gateway sensor registry with mutex
 
 public:
 
@@ -87,15 +90,26 @@ public:
     /**
      * @brief Provides read-only access to the internal sensor registry.
      *
-     * @return Constant reference to the internal sensor registry.
+     * @return Copy to the internal sensor registry.
      */
-    const std::unordered_map<uint32_t, SensorInfo>& getSensors() const;
+    std::unordered_map<uint32_t, SensorInfo> getSensors() const;
 
     /**
-     * @brief Returns the last heartbeat time received from the sensor.
+     * @brief Checks all registered sensors for heartbeat timeout.
      *
-     * @param sensorId The sensor uniqe identifier.
-     * @return The last heartbeat time.
+     * Iterates over all known sensors and compares their last received heartbeat
+     * time with the current system time. Sensors that did not send a heartbeat
+     * within the allowed timeout period are considered offline.
      */
-    uint64_t getLastHeartbeatTime(uint32_t sensorId) const;
+    void detectOfflineSensors();
+
+    /**
+     * @brief Returns the time elapsed since the last received heartbeat.
+     *
+     * Used by monitoring components to display sensor heartbeat age.
+     *
+     * @param sensorId ID of the sensor to query.
+     * @return Elapsed time in seconds since the last heartbeat was received.
+     */
+    uint64_t getSecondsSinceLastHeartbeat(uint32_t sensorId) const;
 };

@@ -2,6 +2,7 @@
 #include "gateway/Gateway.hpp"
 #include "fakes/FakeLogger.hpp"
 #include "common/TimeUtils.hpp"
+#include "common/SensorTypesString.hpp"
 
 
 TEST(Gateway, CreatesNewSensor)
@@ -91,7 +92,7 @@ TEST(Gateway, UpdatesTimestamp)
     const auto& sensors = gateway.getSensors();
 
     ASSERT_EQ(sensors.size(), 1);
-    EXPECT_GT(sensors.at(2).lastTelemetryTime, 0);
+    EXPECT_GT(sensors.at(2).lastTelemetryReceivedTime, 0);
 }
 
 
@@ -120,34 +121,6 @@ TEST(Gateway, HandlePacketUpdatesSensor)
 
     ASSERT_EQ(sensors.size(), 1);
     EXPECT_EQ(sensors.at(5).lastTelemetry.header.sensorId, 5);
-}
-
-
-TEST(Gateway, HandlesHeartbeat)
-{
-    FakeLogger logger;
-    Gateway gateway(logger);
-
-    HeartbeatMessage hb;
-
-    hb.header.type = MessageType::HEARTBEAT;
-    hb.header.sensorId = 10;
-    hb.header.timestamp_ms = 123;
-
-    uint64_t before = now();
-
-    gateway.handleHeartbeat(hb);
-
-    uint64_t after = now();
-
-    auto sensors = gateway.getSensors();
-
-    ASSERT_EQ(sensors.size(), 1);
-
-    uint64_t heartbeatTime = gateway.getLastHeartbeatTime(10);
-
-    EXPECT_GE(heartbeatTime, before);
-    EXPECT_LE(heartbeatTime, after);
 }
 
 
@@ -192,9 +165,14 @@ TEST(Gateway, HandlePacketProcessesHeartbeat)
 
     gateway.handlePacket(packet);
 
-    ASSERT_EQ(gateway.getSensors().size(), 1);
+    const auto sensors = gateway.getSensors();
 
-    EXPECT_GT(gateway.getLastHeartbeatTime(7),0);
+    ASSERT_EQ(sensors.size(), 1);
+
+    const auto& sensor = sensors.at(7);
+
+    EXPECT_EQ(sensor.health, SensorHealth::ONLINE);
+    EXPECT_GT(sensor.lastHeartbeatReceivedTime, 0);
 }
 
 
@@ -212,7 +190,7 @@ TEST(Gateway, HeartbeatUpdatesExistingSensor)
 
     gateway.updateSensorInfo(telemetry);
 
-    uint64_t oldTelemetryTime = gateway.getSensors().at(3).lastTelemetryTime;
+    uint64_t oldTelemetryTime = gateway.getSensors().at(3).lastTelemetryReceivedTime;
 
 
     HeartbeatMessage hb;
@@ -226,5 +204,113 @@ TEST(Gateway, HeartbeatUpdatesExistingSensor)
 
     EXPECT_EQ(sensor.lastTelemetry.value, 22.5);
 
-    EXPECT_GE(sensor.lastHeartbeatTime,oldTelemetryTime);
+    EXPECT_GE(sensor.lastHeartbeatReceivedTime, oldTelemetryTime);
+}
+
+
+TEST(Gateway, HeartbeatOnline)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+    HeartbeatMessage hb;
+    hb.header.type = MessageType::HEARTBEAT;
+    hb.header.sensorId = 1;
+    hb.header.timestamp_ms = 123;
+
+    gateway.handleHeartbeat(hb);
+    const auto& sensor = gateway.getSensors().at(1);
+
+    ASSERT_EQ(sensor.health, SensorHealth::ONLINE);
+    EXPECT_GT(sensor.lastHeartbeatReceivedTime, 0);
+}
+
+
+TEST(Gateway, SensorWithoutHeartbeatRemainsUnknown)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+    TelemetryMessage telemetry{
+        {MessageType::TELEMETRY, 7, 100},
+        SensorType::Temperature,
+        SensorState::ACTIVE,
+        30
+    };
+
+    gateway.updateSensorInfo(telemetry);
+
+    const auto& sensor = gateway.getSensors().at(7);
+
+    ASSERT_EQ(sensor.health, SensorHealth::UNKNOWN);
+}
+
+
+TEST(Gateway, HandlePacketHeartbeatDoesNotOverwriteTelemetry)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+    PacketSerializer serializer;
+
+    TelemetryMessage telemetry{
+        {MessageType::TELEMETRY, 5, 100},
+        SensorType::Temperature,
+        SensorState::ACTIVE,
+        25.0
+    };
+
+    auto telemetryPacket = serializer.serialize(telemetry);
+
+    gateway.handlePacket(telemetryPacket);
+
+
+    HeartbeatMessage hb;
+    hb.header.type = MessageType::HEARTBEAT;
+    hb.header.sensorId = 5;
+
+    auto heartbeatPacket = serializer.serialize(hb);
+
+    gateway.handlePacket(heartbeatPacket);
+
+
+    const auto sensors = gateway.getSensors();
+
+    ASSERT_EQ(sensors.size(), 1);
+
+    const auto& sensor = sensors.at(5);
+
+    EXPECT_EQ(sensor.lastTelemetry.value, 25.0);
+    EXPECT_EQ(sensor.health, SensorHealth::ONLINE);
+}
+
+
+TEST(Gateway, SensorBecomesOnlineAfterHeartbeat)
+{
+    FakeLogger logger;
+    Gateway gateway(logger);
+
+
+    TelemetryMessage telemetry{
+        {MessageType::TELEMETRY, 8, 100},
+        SensorType::Motion,
+        SensorState::ACTIVE,
+        0.3
+    };
+
+    gateway.updateSensorInfo(telemetry);
+
+
+    EXPECT_EQ(gateway.getSensors().at(8).health,SensorHealth::UNKNOWN);
+
+    HeartbeatMessage hb;
+    hb.header.type = MessageType::HEARTBEAT;
+    hb.header.sensorId = 8;
+
+    gateway.handleHeartbeat(hb);
+
+    const auto& sensor = gateway.getSensors().at(8);
+
+    EXPECT_EQ(sensor.health, SensorHealth::ONLINE);
+    EXPECT_GT(sensor.lastHeartbeatReceivedTime, 0);
 }

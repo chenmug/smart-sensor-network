@@ -52,3 +52,21 @@ std::string to_string(MessageType type)
 {
     return (type == MessageType::TELEMETRY) ? "TELEMETRY" : "HEARTBEAT";
 }
+
+
+// /********** STRING SENSOR HEALTH ***********/
+
+std::string to_string(SensorHealth health)
+{
+    switch(health)
+    {
+        case SensorHealth::ONLINE:
+            return "ONLINE";
+        
+        case SensorHealth::OFFLINE:
+            return "OFFLINE";
+
+        default:
+            return "UNKNOWN";
+    }
+}

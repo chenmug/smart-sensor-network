@@ -34,3 +34,14 @@ std::string to_string(SensorState state);
  * @return A string representing the given MessageType value.
  */
 std::string to_string(MessageType type);
+
+/**
+ * @brief Converts a SensorHealth enum value to its string representation.
+ *
+ * This function maps each SensorHealth enum value to a human-readable string.
+ * It is typically used for logging, debugging, and telemetry visualization.
+ *
+ * @param health The sensor health type to convert.
+ * @return A string representing the given SensorHealth value.
+ */
+std::string to_string(SensorHealth health);

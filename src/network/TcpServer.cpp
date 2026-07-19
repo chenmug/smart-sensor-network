@@ -6,6 +6,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <thread>
 
@@ -177,15 +178,35 @@ std::string TcpServer::processRequest(const std::string& request)
     {
         const auto& sensors = gateway.getSensors();
 
-        std::string response;
+        std::ostringstream oss;
 
-        for (const auto& [id, _] : sensors)
+        oss << "=== SENSOR LIST ===\n\n";
+
+        oss << std::left
+            << std::setw(6)  << "ID"
+            << std::setw(15) << "TYPE"
+            << std::setw(12) << "STATE"
+            << std::setw(12) << "HEALTH"
+            << "LAST HB\n";
+
+        oss << "-----------------------------------------------------\n";
+
+        for (const auto& [id, info] : sensors)
         {
-            response += std::to_string(id) + " ";
+            const auto& telemetry = info.lastTelemetry;
+
+            oss << std::left
+                << std::setw(6)  << id
+                << std::setw(15) << to_string(telemetry.type)
+                << std::setw(12) << to_string(telemetry.state)
+                << std::setw(12) << to_string(info.health)
+                << gateway.getSecondsSinceLastHeartbeat(id)
+                << " sec\n";
         }
 
-        response += "\n\n";
-        return response;
+        oss << "\n\n";
+
+        return oss.str();
     }
 
     if (req.rfind("get ", 0) == 0)
@@ -223,7 +244,8 @@ std::string TcpServer::processRequest(const std::string& request)
 
                 << "Heartbeat Status" << "\n"
                 << "----------------" << "\n"
-                << "lastHeartbeat : " << info.lastHeartbeatTime << "\n\n\n";
+                << "health         : " << to_string(info.health) << "\n"
+                << "last heartbeat : " << gateway.getSecondsSinceLastHeartbeat(r.header.sensorId) << " sec ago" << "\n\n\n";
 
             return oss.str();
         }

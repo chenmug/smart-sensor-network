@@ -1,6 +1,9 @@
 #pragma once
 #include <cstdint>  // uint32_t, uint64_t
 
+
+constexpr uint64_t SENSOR_HEARTBEAT_TIMEOUT_MS = 10000;  // Timeout in milliseconds for receiving a heartbeat message
+
 /**
  * @brief Defines the different types of sensors in the system.
  *
@@ -39,6 +42,21 @@ enum class MessageType
 {
     TELEMETRY,  // Sensor measurement and operational state
     HEARTBEAT   // Periodic liveness notification
+};
+
+/**
+ * @brief Represents the communication health state of a sensor.
+ *
+ * The Gateway monitors sensor availability using periodic heartbeat messages.
+ * Each sensor is considered online after successfully sending a heartbeat.
+ * If the time since the last received heartbeat exceeds the configured timeout,
+ * the sensor is considered offline.
+ */
+enum class SensorHealth
+{
+    UNKNOWN,  // Initial state before receiving the first heartbeat
+    ONLINE,   // Sensor is actively sending heartbeat messages
+    OFFLINE   // No heartbeat received within the allowed timeout period
 };
 
 /**

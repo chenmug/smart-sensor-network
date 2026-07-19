@@ -17,12 +17,13 @@ The current implementation includes:
 * Simulated sensor nodes generating telemetry data
 * Multiple sensor types (Motion, Temperature, Pressure, Battery)
 * Binary serialization and deserialization of telemetry and heartbeat messages
-* UDP-based telemetry and heartbeat transmission
-* Central Gateway maintaining the latest state of each sensor
-* Heartbeat tracking for sensor health monitoring
-* TCP monitoring interface for querying sensor information
-* Thread-safe logging system with timestamped events
-* Unit tests for core components using GoogleTest
+* UDP-based telemetry and heartbeat communication
+* Central Gateway maintaining sensor state
+* Heartbeat-based sensor health monitoring
+* Automatic offline detection using heartbeat timeout
+* TCP monitoring interface for inspecting sensor information
+* Thread-safe logging system
+* Unit tests using GoogleTest
 
 ---
 
@@ -52,20 +53,20 @@ Examples include querying sensor status, requesting the latest readings, or insp
     +----------------+
     |                |
 Telemetry        Heartbeat
-(periodic)       (periodic)
     |                |
     UDP              UDP
     |                |
     +-------+--------+
             |
             v
-        Gateway
+         Gateway
             |
-            | TCP
-            v
-     +-------------+
-     | TCP Client  |
-     +-------------+
+     +------+------+
+     |             |
+ Watchdog       TCP Server
+     |             |
+ Health       Monitoring Client
+ Tracking
 
 
 All components
@@ -88,7 +89,17 @@ Example:
 $ nc 127.0.0.1 8080
 
 list
-1 2 3 4 5 6
+=== SENSOR LIST ===
+
+ID    TYPE           STATE       HEALTH      LAST HB
+-----------------------------------------------------
+6     Pressure       ACTIVE      ONLINE      2 sec
+5     Battery        ACTIVE      ONLINE      2 sec
+4     Temperature    ACTIVE      ONLINE      2 sec
+3     Temperature    WARNING     OFFLINE     17 sec
+2     Motion         ACTIVE      ONLINE      2 sec
+1     Motion         ACTIVE      ONLINE      2 sec
+
 
 get 2
 === SENSOR INFORMATION ===
@@ -107,27 +118,41 @@ value       : 0.879716
 
 Heartbeat Status
 ----------------
-lastHeartbeat : 1784213736100
+health         : ONLINE
+last heartbeat : 2 sec ago
+
 ```
 
 ---
 
 ## Current Features
 
-* Sensor simulation framework
+#### Sensor simulation framework
+* Object-oriented sensor hierarchy
 * Multiple sensor implementations:
   * Motion sensor
   * Temperature sensor
   * Pressure sensor
   * Battery sensor
+
+#### Communication
 * UDP socket communication
 * TCP monitoring server
 * Binary packet protocol supporting telemetry and heartbeat messages
-* Gateway-based sensor state management
-* Multithreaded execution
+
+#### Gateway & Monitoring
+* Central sensor registry
+* Latest telemetry storage
+* Heartbeat timestamp tracking
+* Sensor health states:
+ * UNKNOWN
+ * ONLINE
+ * OFFLINE
+* Watchdog-based offline detection
+* Thread-safe access to shared sensor data
+
+#### Software Design
 * Synchronization using mutexes and condition variables
-* Thread-safe timestamped logging
-* Heartbeat messaging and heartbeat timestamp tracking
 * Interface-based design for improved testability
 * GoogleTest unit tests for core components
 
@@ -135,8 +160,6 @@ lastHeartbeat : 1784213736100
 
 ## Planned Features
 
-* Sensor offline detection based on heartbeat timeout
-* Watchdog timers
 * Packet loss simulation
 * CRC validation
 * Prometheus metrics
@@ -171,6 +194,13 @@ Rather than targeting specific hardware, the project simulates how embedded devi
 
 **Work in Progress**
 
-The networking infrastructure, telemetry pipeline, sensor simulation framework, and monitoring interface are implemented.
+Implemented:
 
-Additional embedded-oriented features such as heartbeat-based offline detection, watchdog mechanisms, and protocol reliability improvements are planned.
+* Sensor simulation framework
+* UDP telemetry pipeline
+* Heartbeat monitoring
+* Gateway state management
+* TCP monitoring interface
+* Offline sensor detection
+
+Future improvements focus on protocol robustness and additional embedded-system features.

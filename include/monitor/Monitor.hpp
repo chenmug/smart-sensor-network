@@ -51,4 +51,13 @@ public:
      * @return Formatted sensor information as a string.
      */
     std::string sensorDetails(uint32_t id) const;
+
+    /**
+     * @brief Generates the help text for the monitoring interface.
+     *
+     * Used by TCP clients to discover available commands and their usage.
+     *
+     * @return Formatted help message containing supported commands.
+     */
+    std::string help() const;
 };

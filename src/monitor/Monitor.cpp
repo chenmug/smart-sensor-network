@@ -98,3 +98,19 @@ std::string Monitor::sensorDetails(uint32_t id) const
 
     return oss.str();
 }
+
+
+// /******************** HELP *********************/
+
+std::string Monitor::help() const
+{
+    return
+        "Available commands:\n"
+        "-------------------\n"
+        "list              - Show all sensors\n"
+        "get <id>          - Show sensor details\n"
+        "health            - Show sensor health status\n"
+        "stats             - Show system statistics\n"
+        "recovery <id>     - Recover offline sensor\n"
+        "help              - Show available commands\n\n";
+}

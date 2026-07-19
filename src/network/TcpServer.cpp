@@ -171,6 +171,11 @@ std::string TcpServer::processRequest(const std::string& request)
 
     logger.log("[TCP] Command: " + req);
 
+    if (req == "help")
+    {
+        return monitor.help();
+    }
+
     if (req == "list")
     {
         return monitor.sensorList();
@@ -185,7 +190,7 @@ std::string TcpServer::processRequest(const std::string& request)
             {
                 logger.log("[TCP] Sensor " + std::to_string(id) + " not found");
             }
-            
+
             return monitor.sensorDetails(id);
         }
         catch (const std::exception&)

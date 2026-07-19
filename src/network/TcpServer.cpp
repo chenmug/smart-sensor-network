@@ -181,6 +181,11 @@ std::string TcpServer::processRequest(const std::string& request)
         return monitor.sensorList();
     }
 
+    if (req == "health")
+    {
+        return monitor.healthSummary();
+    }
+
     if (req.rfind("get ", 0) == 0)
     {
         try

@@ -60,4 +60,15 @@ public:
      * @return Formatted help message containing supported commands.
      */
     std::string help() const;
+
+    /**
+     * @brief Generates a summary of the current health status of all sensors.
+     *
+     * Produces a formatted report containing the number of online, offline,
+     * and unknown sensors, followed by a list of all sensors currently
+     * marked as offline.
+     *
+     * @return Formatted health summary for the monitoring interface.
+     */
+    std::string healthSummary() const;
 };

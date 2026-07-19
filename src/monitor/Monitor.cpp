@@ -114,3 +114,56 @@ std::string Monitor::help() const
         "recovery <id>     - Recover offline sensor\n"
         "help              - Show available commands\n\n";
 }
+
+
+// /******************* HEALTH ********************/
+
+std::string Monitor::healthSummary() const
+{
+    const auto sensors = gateway.getSensors();
+    size_t online = 0;
+    size_t offline = 0;
+    size_t unknown = 0;
+
+    for (const auto& [id, info] : sensors)
+    {
+        switch ((info.health))
+        {
+        case SensorHealth::ONLINE:
+        {
+            ++online;
+            break;
+        }
+
+        case SensorHealth::OFFLINE:
+        {
+            ++offline;
+            break;
+        }
+        
+        default:
+            ++unknown;
+            break;
+        }
+    }
+
+    std::ostringstream oss;
+
+    oss << "=== HEALTH SUMMARY ===\n\n"
+        << "ONLINE  : " << online << "\n"
+        << "OFFLINE : " << offline << "\n"
+        << "UNKNOWN : " << unknown << "\n\n"
+
+        << "Offline sensors:\n";
+
+    for (const auto& [id, info] : sensors)
+    {
+        if (info.health == SensorHealth::OFFLINE)
+        {
+            oss << "- Sensor " << id << " ("
+                << to_string(info.lastTelemetry.type) << ")\n\n\n";
+        }  
+    }
+
+    return oss.str();
+}

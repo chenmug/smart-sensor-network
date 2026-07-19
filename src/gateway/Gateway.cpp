@@ -48,6 +48,7 @@ void Gateway::updateSensorInfo(const TelemetryMessage& message)
     
     info.lastTelemetry = message;
     info.lastTelemetryReceivedTime = now();
+    ++telemetryPacketsReceived;
 
     logger.log("[GATEWAY] Updated sensor " +
                std::to_string(message.header.sensorId) +
@@ -70,6 +71,7 @@ void Gateway::handleHeartbeat(const HeartbeatMessage& message)
     }
 
     info.health = SensorHealth::ONLINE;
+    ++heartbeatPacketsReceived;
 }
 
 
@@ -137,4 +139,24 @@ uint64_t Gateway::getSecondsSinceLastHeartbeat(uint32_t sensorId) const
     }
 
     return (now() - info.lastHeartbeatReceivedTime) / 1000;
+}
+
+
+// /******* GET TELEMETRY PACKETS RECEIVED *******/
+
+uint64_t Gateway::getTelemetryPacketsReceived() const
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    
+    return telemetryPacketsReceived;
+}
+
+
+// /******* GET HEARTBEAT PACKETS RECEIVED *******/
+
+uint64_t Gateway::getHeartbeatPacketsReceived() const
+{
+    std::lock_guard<std::mutex> lock(mtx);
+
+    return heartbeatPacketsReceived;
 }

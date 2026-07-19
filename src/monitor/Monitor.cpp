@@ -116,7 +116,7 @@ std::string Monitor::help() const
 }
 
 
-// /******************* HEALTH ********************/
+// /*************** HEALTH SUMMARY ****************/
 
 std::string Monitor::healthSummary() const
 {
@@ -164,6 +164,24 @@ std::string Monitor::healthSummary() const
                 << to_string(info.lastTelemetry.type) << ")\n\n\n";
         }  
     }
+
+    return oss.str();
+}
+
+
+// /******************* STATS *********************/
+
+std::string Monitor::stats() const
+{
+    const auto sensors = gateway.getSensors();
+
+    std::ostringstream oss;
+
+    oss << "=== SYSTEM STATISTICS ===\n\n";
+
+    oss << "Total sensors      : " << sensors.size() << "\n";
+    oss << "Telemetry packets  : " << gateway.getTelemetryPacketsReceived() << "\n";
+    oss << "Heartbeat messages : " << gateway.getHeartbeatPacketsReceived() << "\n\n\n";
 
     return oss.str();
 }

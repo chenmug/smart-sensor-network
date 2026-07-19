@@ -71,4 +71,15 @@ public:
      * @return Formatted health summary for the monitoring interface.
      */
     std::string healthSummary() const;
+
+    /**
+     * @brief Generates a summary of the current system statistics.
+     *
+     * Produces a formatted report containing general runtime statistics such as
+     * the total number of registered sensors and the number of telemetry and
+     * heartbeat messages processed by the Gateway.
+     *
+     * @return Formatted system statistics report.
+     */
+    std::string stats() const;
 };

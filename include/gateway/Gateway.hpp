@@ -42,7 +42,9 @@ private:
     std::unordered_map<uint32_t, SensorInfo> sensors;  // Registry of all sensors known to the Gateway.
     PacketSerializer serializer;                       // Serializes and deserializes protocol packets.
     ILogger& logger;                                   // Shared thread-safe logger.
-    mutable std::mutex mtx;                            // Protect Gateway sensor registry with mutex
+    mutable std::mutex mtx;                            // Protect Gateway sensor registry with mutex.
+    uint64_t telemetryPacketsReceived = 0;             // Total number of telemetry packets received.
+    uint64_t heartbeatPacketsReceived = 0;             // Total number of heartbeat packets received.
 
 public:
 
@@ -112,4 +114,18 @@ public:
      * @return Elapsed time in seconds since the last heartbeat was received.
      */
     uint64_t getSecondsSinceLastHeartbeat(uint32_t sensorId) const;
+
+    /**
+     * @brief Returns the total number of telemetry packets processed.
+     *
+     * @return Number of telemetry packets received by the Gateway.
+     */
+    uint64_t getTelemetryPacketsReceived() const;
+
+    /**
+     * @brief Returns the total number of heartbeat messages processed.
+     *
+     * @return Number of heartbeat messages received by the Gateway.
+     */
+    uint64_t getHeartbeatPacketsReceived() const;
 };

@@ -186,6 +186,11 @@ std::string TcpServer::processRequest(const std::string& request)
         return monitor.healthSummary();
     }
 
+    if (req == "stats")
+    {
+        return monitor.stats();
+    }
+
     if (req.rfind("get ", 0) == 0)
     {
         try

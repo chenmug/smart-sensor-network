@@ -68,6 +68,7 @@ int main()
     std::atomic<bool> udpReady{false};
     std::atomic<bool> tcpReady{false};
     std::atomic<bool> watchdogRunning{true};
+    std::atomic<bool> telemetrySimulationRunning{true};
     std::atomic<bool> heartbeatSimulationRunning{true};
     std::atomic<bool> sensor3Enabled{false};
     std::atomic<bool> sensor7Enabled{false};
@@ -121,17 +122,25 @@ int main()
     logger.log("[SYSTEM] Sensors initialized");
     logger.log("[SYSTEM] Sending initial telemetry packets");
 
-    node1.tick();
-    node2.tick();
-    node3.tick();
-    node4.tick();
-    node5.tick();
-    node6.tick();
-    node7.tick();
+    std::thread telemetryThread([&]()
+    {
+        while (telemetrySimulationRunning)
+        {
+            node1.tick();
+            node2.tick();
+            node3.tick();
+            node4.tick();
+            node5.tick();
+            node6.tick();
+            node7.tick();
+
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+        }
+    });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    logger.log("\n");
+    logger.log("[GATEWAY] Updated all sensors...");
 
 
     // ------------ Heartbeat Simulation --------------
@@ -209,11 +218,13 @@ int main()
     logger.log("[SYSTEM] Shutting down...");
 
     watchdogRunning = false;
+    telemetrySimulationRunning = false;
     heartbeatSimulationRunning = false;
 
     receiver.stop();
     tcpServer.stop();
 
+    telemetryThread.join();
     heartbeatThread.join();
     watchdogThread.join();
     udpThread.join();

@@ -157,8 +157,10 @@ stats
 === SYSTEM STATISTICS ===
 
 Total sensors      : 7
-Telemetry packets  : 7
-Heartbeat messages : 49
+Telemetry packets  : 77
+Heartbeat messages : 32
+Online sensors     : 5
+Offline sensors    : 2
 
 ```
 

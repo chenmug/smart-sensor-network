@@ -1,7 +1,8 @@
 #pragma once
-#include "gateway/Gateway.hpp"  // Forward Declaration
-#include <string>               // For std::string
-#include <cstdint>              // For uint32_t
+#include "gateway/Gateway.hpp"       // Forward Declaration
+#include "common/ProtocolTypes.hpp"  // Forward Declaration
+#include <string>                    // For std::string
+#include <cstdint>                   // For uint32_t
 
 
 /**
@@ -82,4 +83,15 @@ public:
      * @return Formatted system statistics report.
      */
     std::string stats() const;
+
+private:
+    /**
+     * @brief Counts sensors by their current health status.
+     *
+     * Iterates over all registered sensors in the Gateway and calculates the number of sensors that 
+     * are currently online, offline, and in an unknown health state.
+     *
+     * @return A HealthCounts structure containing the number of online, offline, and unknown sensors.
+     */
+    HealthCounts countHealthSensors() const;
 };

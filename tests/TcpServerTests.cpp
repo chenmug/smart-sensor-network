@@ -81,7 +81,7 @@ TEST(TcpServer, UnknownCommand)
 
     std::string response = server.processRequest("hello");
 
-    ASSERT_EQ(response, "unknown command\n");
+    ASSERT_EQ(response, "unknown command\n\n");
 }
 
 
@@ -93,5 +93,5 @@ TEST(TcpServer, ProcessRequest_SensorNotFound)
 
     std::string response = server.processRequest("get 99");
 
-    ASSERT_EQ(response, "sensor not found\n");
+    ASSERT_EQ(response, "sensor not found\n\n");
 }

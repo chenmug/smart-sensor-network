@@ -119,39 +119,14 @@ std::string Monitor::help() const
 
 std::string Monitor::healthSummary() const
 {
-    const auto sensors = gateway.getSensors();
-    size_t online = 0;
-    size_t offline = 0;
-    size_t unknown = 0;
-
-    for (const auto& [id, info] : sensors)
-    {
-        switch ((info.health))
-        {
-        case SensorHealth::ONLINE:
-        {
-            ++online;
-            break;
-        }
-
-        case SensorHealth::OFFLINE:
-        {
-            ++offline;
-            break;
-        }
-        
-        default:
-            ++unknown;
-            break;
-        }
-    }
-
+    const auto& sensors = gateway.getSensors();
+    HealthCounts healthCount = countHealthSensors();
     std::ostringstream oss;
 
     oss << "\n=== HEALTH SUMMARY ===\n\n"
-        << "ONLINE  : " << online << "\n"
-        << "OFFLINE : " << offline << "\n"
-        << "UNKNOWN : " << unknown << "\n\n"
+        << "ONLINE  : " << healthCount.online << "\n"
+        << "OFFLINE : " << healthCount.offline << "\n"
+        << "UNKNOWN : " << healthCount.unknown << "\n\n"
 
         << "Offline sensors:\n";
 
@@ -174,7 +149,8 @@ std::string Monitor::healthSummary() const
 
 std::string Monitor::stats() const
 {
-    const auto sensors = gateway.getSensors();
+    const auto& sensors = gateway.getSensors();
+    HealthCounts healthCount = countHealthSensors();
 
     std::ostringstream oss;
 
@@ -182,7 +158,42 @@ std::string Monitor::stats() const
 
     oss << "Total sensors      : " << sensors.size() << "\n";
     oss << "Telemetry packets  : " << gateway.getTelemetryPacketsReceived() << "\n";
-    oss << "Heartbeat messages : " << gateway.getHeartbeatPacketsReceived() << "\n\n\n";
+    oss << "Heartbeat messages : " << gateway.getHeartbeatPacketsReceived() << "\n";
+    oss << "Online sensors     : " << healthCount.online << "\n";
+    oss << "Offline sensors    : " << healthCount.offline << "\n\n\n";
 
     return oss.str();
+}
+
+
+// /************ COUNT HEALTH SENSORS **************/
+
+HealthCounts Monitor::countHealthSensors() const
+{
+    const auto sensors = gateway.getSensors();
+    HealthCounts hc;
+
+    for (const auto& [id, info] : sensors)
+    {
+        switch ((info.health))
+        {
+        case SensorHealth::ONLINE:
+        {
+           ++ hc.online;
+            break;
+        }
+
+        case SensorHealth::OFFLINE:
+        {
+            ++hc.offline;
+            break;
+        }
+        
+        default:
+            ++hc.unknown;
+            break;
+        }
+    }
+
+    return hc;
 }

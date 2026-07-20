@@ -50,10 +50,6 @@ void Gateway::updateSensorInfo(const TelemetryMessage& message)
     info.lastTelemetry = message;
     info.lastTelemetryReceivedTime = now();
     ++telemetryPacketsReceived;
-
-    logger.log("[GATEWAY] Updated sensor " +
-               std::to_string(message.header.sensorId) +
-               " (" + to_string(message.type) + ")");
 }
 
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>  // uint32_t, uint64_t
+#include <cstddef>  // For size_t
 
 
 constexpr uint64_t SENSOR_HEARTBEAT_TIMEOUT_MS = 10000;  // Timeout in milliseconds for receiving a heartbeat message
@@ -97,4 +98,16 @@ struct TelemetryMessage
     SensorType type;      // Type of sensor that produced the measurement
     SensorState state;    // Current operational state of the sensor
     double value;         // Measured sensor value
+};
+
+/**
+ * @brief Stores the number of sensors in each health state.
+ *
+ * Used to return a summary of the current sensor health distribution
+ */
+struct HealthCounts
+{
+    size_t online = 0;   // Number of sensors currently marked as ONLINE.
+    size_t offline = 0;  // Number of sensors currently marked as OFFLINE.
+    size_t unknown = 0;  // Number of sensors currently marked as UNKNOWN.
 };

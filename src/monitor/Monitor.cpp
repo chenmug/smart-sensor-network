@@ -30,7 +30,7 @@ std::string Monitor::sensorList() const
 
     std::ostringstream oss;
 
-    oss << "=== SENSOR LIST ===\n\n";
+    oss << "\n=== SENSOR LIST ===\n\n";
 
     oss << std::left
         << std::setw(6)  << "ID"
@@ -55,7 +55,7 @@ std::string Monitor::sensorList() const
             << " sec\n";
     }
 
-    oss << "\n\n";
+    oss << "\n\n\n";
 
     return oss.str();
 }
@@ -70,7 +70,7 @@ std::string Monitor::sensorDetails(uint32_t id) const
     auto it = sensors.find(id);
     if (it == sensors.end())
     {
-        return "sensor not found\n";
+        return "sensor not found\n\n";
     }
 
     const auto& r = it->second.lastTelemetry;
@@ -78,7 +78,7 @@ std::string Monitor::sensorDetails(uint32_t id) const
 
     std::ostringstream oss;
 
-    oss << "=== SENSOR INFORMATION ===\n\n"
+    oss << "\n=== SENSOR INFORMATION ===\n\n"
         << "Packet Header\n"
         << "--------------\n"
         << "messageType : " << to_string(r.header.type) << "\n"
@@ -94,7 +94,7 @@ std::string Monitor::sensorDetails(uint32_t id) const
         << "Heartbeat Status\n"
         << "----------------\n"
         << "health         : " << to_string(info.health) << "\n"
-        << "last heartbeat : " << gateway.getSecondsSinceLastHeartbeat(id) << " sec ago\n\n";
+        << "last heartbeat : " << gateway.getSecondsSinceLastHeartbeat(id) << " sec ago\n\n\n";
 
     return oss.str();
 }
@@ -105,14 +105,13 @@ std::string Monitor::sensorDetails(uint32_t id) const
 std::string Monitor::help() const
 {
     return
-        "Available commands:\n"
+        "\nAvailable commands:\n"
         "-------------------\n"
         "list              - Show all sensors\n"
         "get <id>          - Show sensor details\n"
         "health            - Show sensor health status\n"
         "stats             - Show system statistics\n"
-        "recovery <id>     - Recover offline sensor\n"
-        "help              - Show available commands\n\n";
+        "help              - Show available commands\n\n\n";
 }
 
 
@@ -149,7 +148,7 @@ std::string Monitor::healthSummary() const
 
     std::ostringstream oss;
 
-    oss << "=== HEALTH SUMMARY ===\n\n"
+    oss << "\n=== HEALTH SUMMARY ===\n\n"
         << "ONLINE  : " << online << "\n"
         << "OFFLINE : " << offline << "\n"
         << "UNKNOWN : " << unknown << "\n\n"
@@ -161,9 +160,11 @@ std::string Monitor::healthSummary() const
         if (info.health == SensorHealth::OFFLINE)
         {
             oss << "- Sensor " << id << " ("
-                << to_string(info.lastTelemetry.type) << ")\n\n\n";
+                << to_string(info.lastTelemetry.type) << ")\n";
         }  
     }
+
+    oss << "\n\n\n";
 
     return oss.str();
 }
@@ -177,7 +178,7 @@ std::string Monitor::stats() const
 
     std::ostringstream oss;
 
-    oss << "=== SYSTEM STATISTICS ===\n\n";
+    oss << "\n=== SYSTEM STATISTICS ===\n\n";
 
     oss << "Total sensors      : " << sensors.size() << "\n";
     oss << "Telemetry packets  : " << gateway.getTelemetryPacketsReceived() << "\n";

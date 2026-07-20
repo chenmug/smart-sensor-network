@@ -21,8 +21,6 @@ TelemetryMessage SensorNode::tick()
 {
     sensor.collectData();
     const TelemetryMessage reading = sensor.createTelemetry();
-
-    // logger.log("[SENSOR " + std::to_string(reading.header.sensorId) + "] Sending telemetry...");
     
     auto data = serializer.serialize(reading);
     sender.send(data); 

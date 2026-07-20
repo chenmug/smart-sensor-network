@@ -41,6 +41,7 @@ int main()
     BatterySensor sensor5(5);
 
     PressureSensor sensor6(6);
+    PressureSensor sensor7(7);     // Sensor with heartbeat failure simulation
 
 
     // --------------- UDP Senders --------------
@@ -51,6 +52,7 @@ int main()
     UdpSender sender4("127.0.0.1", 9000);
     UdpSender sender5("127.0.0.1", 9000);
     UdpSender sender6("127.0.0.1", 9000);
+    UdpSender sender7("127.0.0.1", 9000);
 
 
     // -------------- Sensor Nodes --------------
@@ -61,11 +63,14 @@ int main()
     SensorNode node4(sensor4, sender4, logger);
     SensorNode node5(sensor5, sender5, logger);
     SensorNode node6(sensor6, sender6, logger);
+    SensorNode node7(sensor7, sender7, logger);
 
     std::atomic<bool> udpReady{false};
     std::atomic<bool> tcpReady{false};
     std::atomic<bool> watchdogRunning{true};
     std::atomic<bool> heartbeatSimulationRunning{true};
+    std::atomic<bool> sensor3Enabled{false};
+    std::atomic<bool> sensor7Enabled{false};
 
 
     // --------- UDP Receiver Thread -------------
@@ -122,6 +127,7 @@ int main()
     node4.tick();
     node5.tick();
     node6.tick();
+    node7.tick();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -139,21 +145,30 @@ int main()
     node4.sendHeartbeat();
     node5.sendHeartbeat();
     node6.sendHeartbeat();
+    node7.sendHeartbeat();
 
     std::thread heartbeatThread([&]()
     {
-        logger.log("[SYSTEM] Simulating heartbeat failure for sensor 3");
+        logger.log("[SYSTEM] Simulating communication loss for sensors 3 and 7");
 
         while (heartbeatSimulationRunning)
         {
             node1.sendHeartbeat();
             node2.sendHeartbeat();
 
-            // node3 intentionally does not send heartbeat
+            if (sensor3Enabled)
+            {
+                node3.sendHeartbeat();
+            }
 
             node4.sendHeartbeat();
             node5.sendHeartbeat();
             node6.sendHeartbeat();
+
+            if (sensor7Enabled)
+            {
+                node7.sendHeartbeat();
+            }
 
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
@@ -170,21 +185,21 @@ int main()
     logger.log("[SYSTEM] Watchdog check completed\n");
 
     logger.log("[SYSTEM] Waiting for TCP client...");
+    logger.log("[SYSTEM] Type 'help' to view available commands.");
     logger.log("[SYSTEM] Press ENTER to shutdown...\n");
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(SENSOR_HEARTBEAT_TIMEOUT_MS + 4000));
 
 
     // ----------- Simulate Sensor Recovery -----------
 
-    logger.log("[SYSTEM] Recovering sensor 3");
+    std::this_thread::sleep_for(std::chrono::milliseconds(SENSOR_HEARTBEAT_TIMEOUT_MS + 8000));
 
-    node3.sendHeartbeat();
+    logger.log("[SYSTEM] Recovering sensor 7");
+
+    sensor7Enabled = true;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    logger.log("[SYSTEM] Sensor 3 recovery completed\n");
-
+    logger.log("[SYSTEM] Sensor 7 recovery completed\n");
 
     std::cin.get();
 

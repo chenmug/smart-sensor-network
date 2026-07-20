@@ -206,12 +206,12 @@ std::string TcpServer::processRequest(const std::string& request)
         catch (const std::exception&)
         {
             logger.log("[TCP] Invalid sensor id");
-            return "invalid sensor id\n";
+            return "invalid sensor id\n\n";
         }  
     }
 
     logger.log("[TCP] Unknown command: " + req);
-    return "unknown command\n";
+    return "unknown command\n\n";
 }
 
 

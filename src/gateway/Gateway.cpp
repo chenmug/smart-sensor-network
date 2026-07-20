@@ -2,6 +2,7 @@
 #include "common/TimeUtils.hpp"
 #include "network/PacketSerializer.hpp"
 #include "common/SensorTypesString.hpp" 
+#include <algorithm>
 
 
 // /**************** CONSTRUCTOR *****************/
@@ -65,11 +66,6 @@ void Gateway::handleHeartbeat(const HeartbeatMessage& message)
     SensorInfo& info = sensors[message.header.sensorId];
 
     info.lastHeartbeatReceivedTime = now();
-    if (info.health == SensorHealth::OFFLINE)
-    {
-        logger.log("[GATEWAY] Sensor " + std::to_string(message.header.sensorId) + " recovered");
-    }
-
     info.health = SensorHealth::ONLINE;
     ++heartbeatPacketsReceived;
 }
@@ -107,14 +103,11 @@ void Gateway::detectOfflineSensors()
             {
                 offlineSensors.push_back(id);
                 info.health = SensorHealth::OFFLINE;
+
+                logger.log("[GATEWAY] Sensor " + std::to_string(id) + " is offline");
             }
             
         }
-    }
-
-    for (auto id : offlineSensors)
-    {
-        logger.log("[GATEWAY] Sensor " + std::to_string(id) + " is offline");
     }
 }
 

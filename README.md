@@ -65,8 +65,9 @@ Telemetry        Heartbeat
      |             |
  Watchdog       TCP Server
      |             |
- Health       Monitoring Client
- Tracking
+ Health          Monitor
+ Tracking          |
+                TCP Client
 
 
 All components
@@ -88,17 +89,31 @@ Example:
 ```text
 $ nc 127.0.0.1 8080
 
+
+help
+
+Available commands:
+-------------------
+list              - Show all sensors
+get <id>          - Show sensor details
+health            - Show sensor health status
+stats             - Show system statistics
+help              - Show available commands
+
+
+
 list
 === SENSOR LIST ===
 
 ID    TYPE           STATE       HEALTH      LAST HB
 -----------------------------------------------------
-6     Pressure       ACTIVE      ONLINE      2 sec
-5     Battery        ACTIVE      ONLINE      2 sec
-4     Temperature    ACTIVE      ONLINE      2 sec
-3     Temperature    WARNING     OFFLINE     17 sec
-2     Motion         ACTIVE      ONLINE      2 sec
 1     Motion         ACTIVE      ONLINE      2 sec
+2     Motion         ACTIVE      ONLINE      2 sec
+3     Temperature    ACTIVE      OFFLINE     20 sec
+4     Temperature    ACTIVE      ONLINE      2 sec
+5     Battery        ACTIVE      ONLINE      2 sec
+6     Pressure       ACTIVE      ONLINE      2 sec
+7     Pressure       ACTIVE      OFFLINE     20 sec
 
 
 get 2
@@ -121,6 +136,30 @@ Heartbeat Status
 health         : ONLINE
 last heartbeat : 2 sec ago
 
+
+
+health
+
+=== HEALTH SUMMARY ===
+
+ONLINE  : 5
+OFFLINE : 2
+UNKNOWN : 0
+
+Offline sensors:
+- Sensor 3 (Temperature)
+- Sensor 7 (Pressure)
+
+
+
+stats
+
+=== SYSTEM STATISTICS ===
+
+Total sensors      : 7
+Telemetry packets  : 7
+Heartbeat messages : 49
+
 ```
 
 ---
@@ -141,14 +180,18 @@ last heartbeat : 2 sec ago
 * Binary packet protocol supporting telemetry and heartbeat messages
 
 #### Gateway & Monitoring
+
 * Central sensor registry
 * Latest telemetry storage
 * Heartbeat timestamp tracking
-* Sensor health states:
- * UNKNOWN
- * ONLINE
- * OFFLINE
+* Sensor health tracking
 * Watchdog-based offline detection
+* TCP monitoring commands:
+  * help
+  * list
+  * get <sensor_id>
+  * health
+  * stats
 * Thread-safe access to shared sensor data
 
 #### Software Design
@@ -164,6 +207,29 @@ last heartbeat : 2 sec ago
 * CRC validation
 * Prometheus metrics
 * MQTT support
+
+---
+
+## Demo
+
+Example monitoring session:
+
+```text
+help
+list
+get 3
+health
+stats
+```
+---
+
+## Design Highlights
+
+* Layered architecture separating networking, gateway, monitoring, and sensor logic
+* Binary protocol shared between sensors and the Gateway
+* Thread-safe shared state protected using mutexes
+* Interface-based design enabling isolated unit testing with fake implementations
+* Watchdog thread responsible for offline sensor detection
 
 ---
 
@@ -196,11 +262,20 @@ Rather than targeting specific hardware, the project simulates how embedded devi
 
 Implemented:
 
-* Sensor simulation framework
-* UDP telemetry pipeline
-* Heartbeat monitoring
+* Multi-threaded sensor simulation
+* UDP telemetry and heartbeat communication
+* Binary serialization protocol
 * Gateway state management
-* TCP monitoring interface
+* Heartbeat-based watchdog
 * Offline sensor detection
+* TCP monitoring interface
+* Command-based monitoring (help, list, get, health, stats)
+
+Planned:
+
+* Packet loss simulation
+* CRC validation
+* Prometheus metrics
+* MQTT support
 
 Future improvements focus on protocol robustness and additional embedded-system features.

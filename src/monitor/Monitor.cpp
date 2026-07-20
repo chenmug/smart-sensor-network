@@ -149,18 +149,17 @@ std::string Monitor::healthSummary() const
 
 std::string Monitor::stats() const
 {
-    const auto& sensors = gateway.getSensors();
-    HealthCounts healthCount = countHealthSensors();
+    SystemStats stats = getStats();
 
     std::ostringstream oss;
 
     oss << "\n=== SYSTEM STATISTICS ===\n\n";
 
-    oss << "Total sensors      : " << sensors.size() << "\n";
-    oss << "Telemetry packets  : " << gateway.getTelemetryPacketsReceived() << "\n";
-    oss << "Heartbeat messages : " << gateway.getHeartbeatPacketsReceived() << "\n";
-    oss << "Online sensors     : " << healthCount.online << "\n";
-    oss << "Offline sensors    : " << healthCount.offline << "\n\n\n";
+    oss << "Total sensors      : " << stats.totalSensors << "\n";
+    oss << "Telemetry packets  : " << stats.telemetryPackets << "\n";
+    oss << "Heartbeat messages : " << stats.heartbeatPackets << "\n";
+    oss << "Online sensors     : " << stats.health.online << "\n";
+    oss << "Offline sensors    : " << stats.health.offline << "\n\n\n";
 
     return oss.str();
 }
@@ -196,4 +195,22 @@ HealthCounts Monitor::countHealthSensors() const
     }
 
     return hc;
+}
+
+
+// /****************** GET STATS *******************/
+
+SystemStats Monitor::getStats() const
+{
+    const auto& sensors = gateway.getSensors();
+    HealthCounts healthCount = countHealthSensors();
+    SystemStats stats;
+
+    stats.totalSensors = sensors.size();
+    stats.telemetryPackets = gateway.getTelemetryPacketsReceived();
+    stats.heartbeatPackets = gateway.getHeartbeatPacketsReceived();
+    stats.health.online = healthCount.online;
+    stats.health.offline = healthCount.offline;
+
+    return stats;
 }

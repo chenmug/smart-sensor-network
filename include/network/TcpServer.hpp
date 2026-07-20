@@ -4,6 +4,7 @@
 #include "monitor/Monitor.hpp"  // Forward Declaration
 #include <atomic>               // For std::atomic
 #include <string>               // For std::string
+#include <mutex>                // For std::mutex
 
 
 /**
@@ -18,8 +19,11 @@
  * - Real-time monitoring of sensor state
  *
  * Supported commands:
- * - "list"     -> returns all registered sensor IDs.
- * - "get <id>" -> returns the latest reading of a specific sensor.
+ * - "help"     -> returns all the commands
+ * - "list"     -> returns all registered sensor IDs
+ * - "get <id>" -> returns the latest reading for the specified sensor
+ * - "health"   -> returns how many sensors is online and offline
+ * - "stats"    -> returns the update statistics of the simulation
  */
 class TcpServer
 {
@@ -27,10 +31,13 @@ private:
     
     static constexpr std::size_t MAX_PACKET_SIZE = 1024;  // Maximum supported TCP request size (bytes).
     Gateway& gateway;                                     // Reference to the central Gateway storing the latest sensor state.
+    ILogger& logger;                                      // Reference to the shared system logger used for thread-safe system logging.
     Monitor monitor;                                      // Formats monitoring responses.
     int serverSocket = -1;                                // File descriptor of the listening TCP socket (-1 indicates an invalid socket).
-    std::atomic<bool> running;                            // Controls whether the server's main loop continues accepting clients.
-    ILogger& logger;                                      // Reference to the shared system logger used for thread-safe system logging.
+    std::atomic<bool> running{false};                     // Controls whether the server's main loop continues accepting clients.
+    std::atomic<bool> clientConnected{false};             // Indicates whether a TCP client is currently connected.
+    std::string lastCommand;                              // Stores the latest command received from the monitoring client.
+    mutable std::mutex commandMutex;                      // Synchronizes access to client monitoring state.
 
 public:
 
@@ -51,10 +58,6 @@ public:
      *
      * Parses the incoming text command, queries the Gateway when necessary,
      * and returns a formatted response that will be sent back to the client.
-     *
-     * Supported commands:
-     * - "list"     -> returns all registered sensor IDs.
-     * - "get <id>" -> returns the latest reading for the specified sensor.
      *
      * Invalid or unsupported commands return an appropriate error message.
      *
@@ -84,6 +87,25 @@ public:
      * @brief Stops the server and releases socket resources.
      */
     ~TcpServer();
+
+    /**
+     * @brief Checks whether a TCP monitoring client is currently connected.
+     *
+     * Used by the console dashboard to display the current TCP connection state.
+     *
+     * @return true if a client is connected, false otherwise.
+     */
+    bool isClientConnected() const;
+
+
+    /**
+     * @brief Returns the most recent command received from the TCP client.
+     *
+     * Used by the monitoring interface to display the latest client request.
+     *
+     * @return Last received TCP command.
+     */
+    std::string getLastCommand() const;
 
 private:
 

@@ -8,6 +8,7 @@
 #include "sensor/SensorNode.hpp"
 #include "network/UdpSender.hpp"
 #include "monitor/Logger.hpp"
+#include "ui/ConsoleRenderer.hpp"
 #include <iostream>
 #include <thread>
 #include <atomic>
@@ -28,6 +29,8 @@ int main()
     Gateway gateway(logger);
     UdpReceiver receiver(gateway, logger, 9000);
     TcpServer tcpServer(gateway, logger, 8080);
+    Monitor monitor(gateway);
+    ConsoleRenderer dashboard(logger,tcpServer,monitor);
 
 
     // ---------------- Sensors -----------------
@@ -72,6 +75,7 @@ int main()
     std::atomic<bool> heartbeatSimulationRunning{true};
     std::atomic<bool> sensor3Enabled{false};
     std::atomic<bool> sensor7Enabled{false};
+    std::atomic<bool> dashboardRunning{true};
 
 
     // --------- UDP Receiver Thread -------------
@@ -99,7 +103,20 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    logger.log("[SYSTEM] All services ready\n");
+    logger.log("[SYSTEM] All services ready");
+
+
+    // ------------ Dashbord Thread -------------
+
+    std::thread dashboardThread([&]()
+    {
+        while(dashboardRunning)
+        {
+            dashboard.render();
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+    });
 
     
     // ------------- Watchdog Thread ---------------
@@ -186,29 +203,28 @@ int main()
 
     // -------------- Watchdog Detection ----------------
 
-    logger.log("\n");
     logger.log("[SYSTEM] Waiting for watchdog detection");
+
+    logger.log("[WATCHDOG] Sensor 3 marked OFFLINE");
+    logger.log("[WATCHDOG] Sensor 7 marked OFFLINE");
 
     std::this_thread::sleep_for(std::chrono::milliseconds(SENSOR_HEARTBEAT_TIMEOUT_MS + 2000));
 
-    logger.log("[SYSTEM] Watchdog check completed\n");
-
+    logger.log("[SYSTEM] Watchdog check completed");
     logger.log("[SYSTEM] Waiting for TCP client...");
-    logger.log("[SYSTEM] Type 'help' to view available commands.");
-    logger.log("[SYSTEM] Press ENTER to shutdown...\n");
 
 
     // ----------- Simulate Sensor Recovery -----------
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(SENSOR_HEARTBEAT_TIMEOUT_MS + 8000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(SENSOR_HEARTBEAT_TIMEOUT_MS + 9000));
 
-    logger.log("[SYSTEM] Recovering sensor 7");
+    logger.log("[WATCHDOG] Sensor 7 recovered");
 
     sensor7Enabled = true;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    logger.log("[SYSTEM] Sensor 7 recovery completed\n");
+    logger.log("[SYSTEM] Sensor 7 recovery completed");
 
     std::cin.get();
 
@@ -217,23 +233,26 @@ int main()
 
     logger.log("[SYSTEM] Shutting down...");
 
-    watchdogRunning = false;
+    dashboardRunning = false;
+
     telemetrySimulationRunning = false;
     heartbeatSimulationRunning = false;
+    watchdogRunning = false;
+
+    dashboardThread.join();
+    telemetryThread.join();
+    heartbeatThread.join();
+    watchdogThread.join();
 
     receiver.stop();
     tcpServer.stop();
 
-    telemetryThread.join();
-    heartbeatThread.join();
-    watchdogThread.join();
     udpThread.join();
     tcpThread.join();
 
-    logger.log("[SYSTEM] Shutdown complete");
-
     logger.stop();
 
+    std::cout << "[SYSTEM] Shutdown complete\n";
     std::cout << "\n=== SYSTEM SHUTDOWN COMPLETE ===\n";
 
     return 0;

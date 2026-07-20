@@ -84,6 +84,16 @@ public:
      */
     std::string stats() const;
 
+    /**
+     * @brief Returns a snapshot of the current system statistics.
+     *
+     * Collects runtime information from the Gateway, including the number of registered sensors, 
+     * received telemetry and heartbeat packets, and the current sensor health distribution.
+     *
+     * @return SystemStats structure containing the current system state summary.
+     */
+    SystemStats getStats() const;
+
 private:
     /**
      * @brief Counts sensors by their current health status.

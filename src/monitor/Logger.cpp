@@ -32,7 +32,15 @@ void Logger::log(const std::string& msg)
 {
     {
         std::lock_guard<std::mutex> lock(mtx);
+
         queue.push(msg);
+
+        history.push_back("[" + currentTimeString() + "] " + msg);
+
+        if (history.size() > MAX_HISTORY)
+        {
+            history.erase(history.begin());
+        }
     }
 
     cv.notify_one();
@@ -53,28 +61,17 @@ void Logger::run()
 
         while (!queue.empty())
         {
-            std::string msg = queue.front();
             queue.pop();
-
-            lock.unlock();
-
-            if (msg == "\n")
-            {
-                std::cout << msg << std::endl;
-            }
-            else
-            {
-                std::cout << "[" << currentTimeString() << "] " << msg << std::endl;
-            }
-
-            lock.lock();
         }
     }
+}
 
-    // flush remaining
-    while (!queue.empty())
-    {
-        std::cout << queue.front() << std::endl;
-        queue.pop();
-    }
+
+// /************ GET RECENT LOGS ************/
+
+std::vector<std::string> Logger::getRecentLogs() const
+{
+    std::lock_guard<std::mutex> lock(mtx);
+
+    return history;
 }

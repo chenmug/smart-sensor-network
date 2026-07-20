@@ -6,6 +6,7 @@
 #include <condition_variable>   // For std::condition_variable
 #include <atomic>               // For std::atomic
 #include <thread>               // For std::thread
+#include <vector>               // For std::vector
 
 
 /**
@@ -22,11 +23,13 @@ class Logger : public ILogger
 {
 private:
 
-    std::queue<std::string> queue;       // Queue of pending log messages.
-    std::mutex mtx;                      // Protects access to the message queue.
-    std::condition_variable cv;          // Notifies the worker when new messages arrive.
-    std::atomic<bool> running{false};    // Indicates whether the logger is running.
-    std::thread worker;                  // Background thread responsible for printing messages.
+    std::queue<std::string> queue;             // Queue of pending log messages.
+    mutable std::mutex mtx;                    // Protects access to the message queue.
+    std::condition_variable cv;                // Notifies the worker when new messages arrive.
+    std::atomic<bool> running{false};          // Indicates whether the logger is running.
+    std::thread worker;                        // Background thread responsible for printing messages.
+    std::vector<std::string> history;          // Stores recent log messages for display in the monitoring dashboard.
+    static constexpr size_t MAX_HISTORY = 15;  // Maximum number of log entries retained in memory.
 
 public:
     /**
@@ -53,6 +56,15 @@ public:
      * Ensures that all queued messages are printed before shutdown.
      */
     void stop();
+
+    /**
+     * @brief Returns the latest log messages.
+     *
+     * Provides a snapshot of recent system logs for monitoring interfaces.
+     *
+     * @return Copy of recent log messages.
+     */
+    std::vector<std::string> getRecentLogs() const;
 
 private:
     /**

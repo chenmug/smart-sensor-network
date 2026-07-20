@@ -15,8 +15,15 @@ file(GLOB_RECURSE CORE_SOURCES
     src/monitor/*.cpp
 )
 
+file(GLOB_RECURSE UI_SOURCES
+    src/ui/*.cpp
+)
+
 add_library(sensor_lib ${CORE_SOURCES})
+add_library(ui_lib ${UI_SOURCES})
+
 target_include_directories(sensor_lib PUBLIC include)
+target_include_directories(ui_lib PUBLIC include)
 
 
 # --------------------
@@ -27,7 +34,10 @@ add_executable(sensor_app
     ${DEMO_SOURCES}
 )
 
-target_link_libraries(sensor_app sensor_lib)
+target_link_libraries(sensor_app
+    sensor_lib
+    ui_lib
+)
 
 # --------------------
 # Tests

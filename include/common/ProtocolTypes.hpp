@@ -111,3 +111,16 @@ struct HealthCounts
     size_t offline = 0;  // Number of sensors currently marked as OFFLINE.
     size_t unknown = 0;  // Number of sensors currently marked as UNKNOWN.
 };
+
+/**
+ * @brief Stores runtime statistics of the sensor network.
+ *
+ * Contains general system counters and current sensor health summary.
+ */
+struct SystemStats
+{
+    size_t totalSensors = 0;      // Total number of registered sensors in the Gateway.
+    size_t telemetryPackets = 0;  // Total number of telemetry packets received from sensors.
+    size_t heartbeatPackets = 0;  // Total number of heartbeat messages received from sensors.
+    HealthCounts health;          // Current distribution of sensors by health state.
+};

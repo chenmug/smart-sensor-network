@@ -84,11 +84,15 @@ void TcpServer::run()
         }
 
         logger.log("[TCP] Client connected");
+        clientConnected = true;
 
         handleClient(clientSock);
+        clientConnected = false;
+
         close(clientSock);
 
         logger.log("[TCP] Client disconnected");
+    
     }
 }
 
@@ -169,6 +173,11 @@ std::string TcpServer::processRequest(const std::string& request)
         req.pop_back();
     }
 
+    {
+        std::lock_guard<std::mutex> lock(commandMutex);
+        lastCommand = req;
+    }
+
     logger.log("[TCP] Command: " + req);
 
     if (req == "help")
@@ -196,7 +205,7 @@ std::string TcpServer::processRequest(const std::string& request)
         try
         {
             uint32_t id = parseId(req);
-            if (id >= gateway.getSensors().size())
+            if (id > gateway.getSensors().size())
             {
                 logger.log("[TCP] Sensor " + std::to_string(id) + " not found");
             }
@@ -229,4 +238,22 @@ uint32_t TcpServer::parseId(const std::string& request) const
     }
 
     return static_cast<uint32_t>(id);
+}
+
+
+// /*********** IS CLIENT CONNECTED ************/
+
+bool TcpServer::isClientConnected() const
+{
+    return clientConnected;
+}
+
+
+// /************ GET LAST COMMAND **************/
+
+std::string TcpServer::getLastCommand() const
+{
+    std::lock_guard<std::mutex> lock(commandMutex);
+
+    return lastCommand.empty() ? "None" : lastCommand;
 }

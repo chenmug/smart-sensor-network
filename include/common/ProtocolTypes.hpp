@@ -11,12 +11,12 @@ constexpr uint64_t SENSOR_HEARTBEAT_TIMEOUT_MS = 10000;  // Timeout in milliseco
  * Each sensor type represents a different physical or simulated data source,
  * and determines how telemetry values are generated and interpreted.
  */
-enum class SensorType 
+enum class SensorType : uint8_t
 {
-    Motion,
-    Temperature,
-    Battery,
-    Pressure
+    Motion =      1,
+    Temperature = 2,
+    Battery =     3,
+    Pressure =    4
 };
 
 /**
@@ -25,11 +25,11 @@ enum class SensorType
  * The state reflects the health and validity of the sensor based on its internal logic and 
  * readings. Each sensor type defines its own rules for transitioning between states.
  */
-enum class SensorState
+enum class SensorState : uint8_t
 {
-    ACTIVE,   // Sensor is operating normally and producing valid readings
-    WARNING,  // Sensor is operating outside optimal range 
-    ERROR     // Sensor is in a critical failure state and may stop reporting data
+    ACTIVE =  1,  // Sensor is operating normally and producing valid readings
+    WARNING = 2,  // Sensor is operating outside optimal range 
+    ERROR =   3   // Sensor is in a critical failure state and may stop reporting data
 };
 
 /**
@@ -39,10 +39,10 @@ enum class SensorState
  * sensor nodes and the Gateway. The message type determines how the payload
  * should be interpreted after deserialization.
  */
-enum class MessageType
+enum class MessageType : uint8_t
 {
-    TELEMETRY,  // Sensor measurement and operational state
-    HEARTBEAT   // Periodic liveness notification
+    TELEMETRY = 1,  // Sensor measurement and operational state
+    HEARTBEAT = 2   // Periodic liveness notification
 };
 
 /**

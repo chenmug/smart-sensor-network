@@ -13,13 +13,16 @@
  */
 namespace
 {
+    constexpr size_t BITS_PER_BYTE = 8;  // Number of bits in 1 byte, used when shifting between byte positions
+    constexpr uint8_t BYTE_MASK = 0xFF;  // Mask used to extract the lowest 8 bits (1 byte) from an integer
+
     template<typename T>
     void write(std::vector<uint8_t>& buffer, const T& value)
     {
-        const size_t offset = buffer.size();
-        buffer.resize(offset + sizeof(T));
-
-        std::memcpy(buffer.data() + offset, &value, sizeof(T));
+        for (size_t i = sizeof(T); i > 0; --i)
+        {
+            buffer.push_back(static_cast<uint8_t>(value >> ((i - 1) * BITS_PER_BYTE) & BYTE_MASK));
+        }
     }
 
 
@@ -31,9 +34,32 @@ namespace
             throw std::runtime_error("Buffer underflow during deserialization");
         }
 
-        T value;
-        std::memcpy(&value, buffer.data() + offset, sizeof(T));
-        offset += sizeof(T);
+        T value = 0;
+
+        for (size_t i = 0; i < sizeof(T); ++i)
+        {
+            value = static_cast<T>((value << 8) | static_cast<T>(buffer[offset++]));
+        }
+
+        return value;
+    }
+
+    
+    void writeDouble(std::vector<uint8_t>& buffer, double value)
+    {
+        uint64_t bits;
+        std::memcpy(&bits, &value, sizeof(bits));
+
+        write(buffer, bits);
+    }
+
+
+    double readDouble(const std::vector<uint8_t>& buffer, size_t& offset)
+    {
+        uint64_t bits = read<uint64_t>(buffer, offset);
+
+        double value;
+        std::memcpy(&value, &bits, sizeof(value));
 
         return value;
     }
@@ -43,7 +69,7 @@ namespace
     {
         PacketHeader header;
 
-        header.type = static_cast<MessageType>(read<int>(buffer, offset));
+        header.type = static_cast<MessageType>(read<uint8_t>(buffer, offset));
         header.sensorId = read<uint32_t>(buffer, offset);
         header.timestamp_ms = read<uint64_t>(buffer, offset);
 
@@ -53,7 +79,7 @@ namespace
 
     void writeHeader(std::vector<uint8_t>& buffer, const PacketHeader& header)
     {
-        write(buffer, static_cast<int>(header.type));
+        write(buffer, static_cast<uint8_t>(header.type));
         write(buffer, header.sensorId);
         write(buffer, header.timestamp_ms);
     }
@@ -66,19 +92,20 @@ std::vector<uint8_t> PacketSerializer::serialize(const TelemetryMessage& message
 {
     std::vector<uint8_t> buffer;
     buffer.reserve(
-        sizeof(int) +
+        sizeof(uint8_t) +
         sizeof(uint32_t) + 
         sizeof(uint64_t) +
-        sizeof(int) + 
-        sizeof(int) +
+        sizeof(uint8_t) + 
+        sizeof(uint8_t) +
         sizeof(double) 
     );
 
     writeHeader(buffer, message.header);
 
-    write(buffer, static_cast<int>(message.type));
-    write(buffer, static_cast<int>(message.state));
-    write(buffer, message.value);
+    write(buffer, static_cast<uint8_t>(message.type));
+    write(buffer, static_cast<uint8_t>(message.state));
+
+    writeDouble(buffer, message.value);
 
     return buffer;
 }
@@ -90,7 +117,7 @@ std::vector<uint8_t> PacketSerializer::serialize(const HeartbeatMessage& message
 {
     std::vector<uint8_t> buffer;
     buffer.reserve(
-        sizeof(int) +
+        sizeof(uint8_t) +
         sizeof(uint32_t) +
         sizeof(uint64_t)
     );
@@ -109,9 +136,9 @@ TelemetryMessage PacketSerializer::deserializeTelemetry(const std::vector<uint8_
     size_t offset = 0;
 
     message.header = readHeader(buffer, offset);
-    message.type = static_cast<SensorType>(read<int>(buffer, offset));
-    message.state = static_cast<SensorState>(read<int>(buffer, offset));
-    message.value = read<double>(buffer, offset);
+    message.type = static_cast<SensorType>(read<uint8_t>(buffer, offset));
+    message.state = static_cast<SensorState>(read<uint8_t>(buffer, offset));
+    message.value = readDouble(buffer, offset);
 
     return message;
 }

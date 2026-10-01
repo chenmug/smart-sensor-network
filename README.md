@@ -2,9 +2,9 @@
 
 ### Distributed Embedded-Inspired Telemetry System (C++)
 
-A C++ project that simulates a network of embedded-inspired sensor devices communicating with a central gateway using UDP telemetry and a TCP monitoring interface.
+A C++ project that simulates a distributed network of embedded-inspired sensor devices communicating with a central Gateway using UDP telemetry and a TCP monitoring interface.
 
-The project explores systems programming concepts including socket programming, multithreading, synchronization, binary protocols, and embedded software architecture.
+The project explores systems programming concepts including socket programming, multithreading, synchronization, binary protocols, serialization, and modular software architecture.
 
 ---
 
@@ -15,68 +15,165 @@ The system simulates a distributed sensor network where multiple sensor nodes ge
 The current implementation includes:
 
 * Simulated sensor nodes generating telemetry data
-* Multiple sensor types (Motion, Temperature, Pressure, Battery)
+* Multiple sensor types: Motion, Temperature, Pressure, and Battery
 * Binary serialization and deserialization of telemetry and heartbeat messages
+* Explicit Big Endian wire format
 * UDP-based telemetry and heartbeat communication
-* Central Gateway maintaining sensor state
+* Central Gateway maintaining sensor state and latest telemetry
 * Heartbeat-based sensor health monitoring
 * Automatic offline detection using heartbeat timeout
 * TCP monitoring interface for inspecting sensor information
-* Thread-safe logging system
+* Thread-safe access to shared Gateway state
 * Unit tests using GoogleTest
 
 ---
 
 ## Why Both UDP and TCP?
 
-The project intentionally separates telemetry traffic from monitoring traffic, following a common architectural pattern used in embedded and distributed systems.
+The project intentionally separates telemetry traffic from monitoring traffic, following a communication pattern commonly used in embedded and distributed systems.
 
 ### UDP Telemetry
 
-Sensor readings are transmitted over UDP because telemetry data favors low latency and minimal protocol overhead.
+Sensor readings are transmitted over UDP because telemetry traffic can favor low latency and low protocol overhead.
 
-In continuous telemetry streams, losing an occasional packet is often acceptable since newer measurements quickly replace older ones.
+In continuous telemetry streams, losing an occasional measurement may be acceptable because newer measurements can replace older ones.
+
+UDP is also used for heartbeat messages.
 
 ### TCP Monitoring
 
-Monitoring commands use TCP because administrative communication requires reliable, ordered delivery.
+Monitoring commands use TCP because administrative communication requires reliable and ordered delivery.
 
-Examples include querying sensor status, requesting the latest readings, or inspecting the current state of the system.
+Examples include:
+
+* Querying sensor status
+* Requesting the latest sensor reading
+* Inspecting sensor health
+* Viewing system statistics
 
 ---
 
 ## Current Architecture
 
 ```text
-        SensorNode
-            |
-    +----------------+
-    |                |
-Telemetry        Heartbeat
-    |                |
-    UDP              UDP
-    |                |
-    +-------+--------+
-            |
-            v
-         Gateway
-            |
-     +------+------+
-     |             |
- Watchdog       TCP Server
-     |             |
- Health          Monitor
- Tracking          |
-                TCP Client
+                         Sensor Nodes
+                              |
+                    +---------+---------+
+                    |                   |
+               Telemetry            Heartbeat
+                    |                   |
+                   UDP                 UDP
+                    |                   |
+                    +---------+---------+
+                              |
+                              v
+                           Gateway
+                              |
+                    +---------+---------+
+                    |                   |
+                 Watchdog           TCP Server
+                    |                   |
+             Health Tracking       Monitoring
+                                        |
+                                        v
+                                   TCP Client
 
 
-All components
-      |
-      v
-+-------------+
-|   Logger    |
-+-------------+
+                    All Components
+                           |
+                           v
+                       +-------+
+                       | Logger|
+                       +-------+
 ```
+
+The Gateway acts as the central communication and state-management component.
+
+Each sensor node periodically generates telemetry and heartbeat messages. The Gateway receives the messages, updates the latest sensor information, and tracks sensor health based on heartbeat activity.
+
+---
+
+## Binary Protocol
+
+The Sensor Network uses a custom binary protocol for communication between sensor nodes and the Gateway.
+
+The protocol defines explicit field sizes and byte ordering instead of relying on C++ struct memory layout.
+
+All multi-byte integer fields are serialized in **Big Endian (network byte order)**.
+
+
+### Protocol Enum Values
+
+| Message Type | Value |
+|--------------|------:|
+| `TELEMETRY`  | 1     |
+| `HEARTBEAT`  | 2     |
+
+| Sensor Type  | Value |
+|--------------|------:|
+| `Motion`     | 1     |
+| `Temperature`| 2     |
+| `Battery`    | 3     |
+| `Pressure`   | 4     |
+
+| Sensor State | Value |
+|--------------|------:|
+| `ACTIVE`     | 1     |
+| `WARNING`    | 2     |
+| `ERROR`      | 3     |
+
+
+### Common Packet Header
+
+Both telemetry and heartbeat messages contain the following header:
+
+| Field        |    Size | Encoding               |
+| ------------ | ------: | ---------------------- |
+| Message Type |  1 byte | `uint8_t`              |
+| Sensor ID    | 4 bytes | `uint32_t`, Big Endian |
+| Timestamp    | 8 bytes | `uint64_t`, Big Endian |
+
+The common header is therefore **13 bytes**.
+
+### Telemetry Message
+
+A telemetry packet consists of the common header followed by the telemetry payload:
+
+| Offset | Size | Field        | Encoding                           |
+| -----: | ---: | ------------ | ---------------------------------- |
+|      0 |    1 | Message Type | `uint8_t`                          |
+|      1 |    4 | Sensor ID    | `uint32_t`, Big Endian             |
+|      5 |    8 | Timestamp    | `uint64_t`, Big Endian             |
+|     13 |    1 | Sensor Type  | `uint8_t`                          |
+|     14 |    1 | Sensor State | `uint8_t`                          |
+|     15 |    8 | Sensor Value | `double`, serialized in Big Endian |
+
+**Total size: 23 bytes**
+
+### Heartbeat Message
+
+A heartbeat contains only the common header:
+
+| Offset | Size | Field        | Encoding               |
+| -----: | ---: | ------------ | ---------------------- |
+|      0 |    1 | Message Type | `uint8_t`              |
+|      1 |    4 | Sensor ID    | `uint32_t`, Big Endian |
+|      5 |    8 | Timestamp    | `uint64_t`, Big Endian |
+
+**Total size: 13 bytes**
+
+
+### Floating-Point Serialization
+
+Sensor measurements are represented as C++ `double` values.
+
+The serializer preserves the raw 64-bit representation of the `double` and serializes those bits in Big Endian order. The deserializer reconstructs the original `double` from the received bit representation.
+
+The protocol does not serialize C++ structs directly. Each field is serialized explicitly to avoid dependencies on compiler-specific padding, alignment, or host memory layout.
+
+### Protocol Validation
+
+The deserializer validates that enough bytes are available before reading each field and reports buffer-underflow errors for incomplete packets.
 
 ---
 
@@ -84,11 +181,10 @@ All components
 
 The system exposes a TCP monitoring interface that allows querying the current state of connected sensors.
 
-Example:
+Example using `netcat`:
 
 ```text
 $ nc 127.0.0.1 8080
-
 
 help
 
@@ -101,8 +197,8 @@ stats             - Show system statistics
 help              - Show available commands
 
 
-
 list
+
 === SENSOR LIST ===
 
 ID    TYPE           STATE       HEALTH      LAST HB
@@ -117,10 +213,11 @@ ID    TYPE           STATE       HEALTH      LAST HB
 
 
 get 2
+
 === SENSOR INFORMATION ===
 
 Packet Header
---------------
+-------------
 messageType : TELEMETRY
 sensorId    : 2
 timestamp   : 1784213736100
@@ -137,7 +234,6 @@ health         : ONLINE
 last heartbeat : 2 sec ago
 
 
-
 health
 
 === HEALTH SUMMARY ===
@@ -151,7 +247,6 @@ Offline sensors:
 - Sensor 7 (Pressure)
 
 
-
 stats
 
 === SYSTEM STATISTICS ===
@@ -161,54 +256,76 @@ Telemetry packets  : 77
 Heartbeat messages : 32
 Online sensors     : 5
 Offline sensors    : 2
-
 ```
 
 ---
 
 ## Current Features
 
-#### Sensor simulation framework
+### Sensor Simulation
+
 * Object-oriented sensor hierarchy
 * Multiple sensor implementations:
+
   * Motion sensor
   * Temperature sensor
   * Pressure sensor
   * Battery sensor
+* Periodic telemetry generation
+* Periodic heartbeat generation
 
-#### Communication
+### Communication
+
 * UDP socket communication
 * TCP monitoring server
-* Binary packet protocol supporting telemetry and heartbeat messages
+* Custom binary packet protocol
+* Telemetry and heartbeat message types
+* Explicit Big Endian serialization
+* Binary serialization/deserialization
+* Packet validation during deserialization
 
-#### Gateway & Monitoring
+### Gateway & Monitoring
 
 * Central sensor registry
 * Latest telemetry storage
 * Heartbeat timestamp tracking
-* Sensor health tracking
+* Separate sensor state and health tracking
 * Watchdog-based offline detection
 * TCP monitoring commands:
-  * help
-  * list
-  * get <sensor_id>
-  * health
-  * stats
+
+  * `help`
+  * `list`
+  * `get <sensor_id>`
+  * `health`
+  * `stats`
 * Thread-safe access to shared sensor data
 
-#### Software Design
-* Synchronization using mutexes and condition variables
+### Software Design
+
+* Layered architecture separating sensor, networking, Gateway, and monitoring logic
 * Interface-based design for improved testability
+* Synchronization using mutexes and condition variables
 * GoogleTest unit tests for core components
+* Fake UDP sender for isolated sensor-node testing
 
 ---
 
-## Planned Features
+## Testing
 
-* Packet loss simulation
-* CRC validation
-* Prometheus metrics
-* MQTT support
+The project uses **GoogleTest** for unit testing.
+
+Current tests cover core sensor and sensor-node functionality.
+
+Packet serialization/deserialization tests are being added to verify:
+
+* Telemetry round-trip serialization
+* Heartbeat round-trip serialization
+* Packet sizes
+* Big Endian byte representation
+* Enum wire values
+* `double` serialization/deserialization
+* Buffer-underflow handling
+* Protocol boundary conditions
 
 ---
 
@@ -223,14 +340,19 @@ get 3
 health
 stats
 ```
+
 ---
 
 ## Design Highlights
 
-* Layered architecture separating networking, gateway, monitoring, and sensor logic
-* Binary protocol shared between sensors and the Gateway
+* Layered architecture separating networking, Gateway, monitoring, and sensor logic
+* Binary protocol shared between sensor nodes and the Gateway
+* Explicit wire format independent of C++ struct memory layout
+* Big Endian serialization using bit operations
+* Separate sensor state and communication health tracking
 * Thread-safe shared state protected using mutexes
-* Interface-based design enabling isolated unit testing with fake implementations
+* Interface-based design enabling isolated unit testing
+* Fake network sender used for unit tests
 * Watchdog thread responsible for offline sensor detection
 
 ---
@@ -243,7 +365,8 @@ stats
 * TCP/IP
 * UDP
 * Multithreading
-* Synchronization primitives (mutex, condition_variable)
+* `std::mutex`
+* `std::condition_variable`
 * Object-Oriented Design
 * CMake
 * GoogleTest
@@ -252,9 +375,11 @@ stats
 
 ## Why This Project?
 
-The goal of this project is to gain hands-on experience building software commonly found in embedded and IoT systems, focusing on networking, concurrency, and modular software architecture.
+The goal of this project is to gain hands-on experience building software commonly found in embedded and IoT systems, with a focus on networking, concurrency, binary communication protocols, and modular software architecture.
 
-Rather than targeting specific hardware, the project simulates how embedded devices exchange telemetry with a central monitoring service.
+Rather than targeting specific hardware, the project simulates how embedded-inspired sensor devices exchange telemetry with a central monitoring service.
+
+The project was built to strengthen practical systems-programming and networking skills while applying software-design and testing principles in a multi-component C++ system.
 
 ---
 
@@ -262,22 +387,33 @@ Rather than targeting specific hardware, the project simulates how embedded devi
 
 **Work in Progress**
 
-Implemented:
+### Implemented
 
 * Multi-threaded sensor simulation
+* Multiple sensor types
 * UDP telemetry and heartbeat communication
-* Binary serialization protocol
+* Custom binary serialization protocol
+* Explicit Big Endian wire format
 * Gateway state management
 * Heartbeat-based watchdog
 * Offline sensor detection
 * TCP monitoring interface
-* Command-based monitoring (help, list, get, health, stats)
+* Command-based monitoring:
 
-Planned:
+  * `help`
+  * `list`
+  * `get`
+  * `health`
+  * `stats`
+* Thread-safe shared Gateway state
+* Unit testing infrastructure with GoogleTest
+
+
+### Planned
 
 * Packet loss simulation
 * CRC validation
 * Prometheus metrics
 * MQTT support
 
-Future improvements focus on protocol robustness and additional embedded-system features.
+Future improvements focus on protocol robustness, testing coverage, and additional embedded-system communication features.

@@ -10,7 +10,7 @@
  * network transmission, and reconstructs them from raw byte buffers received over the network.
  *
  * The serializer currently supports:
- * - PacketMessage
+ * - TelemetryMessage
  * - HeartbeatMessage
  *
  * All functions are stateless and provided as static utilities.
